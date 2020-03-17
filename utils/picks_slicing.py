@@ -8,6 +8,7 @@ import logging
 # Read S-file on reading_path and slice relevant waveforms in waveforms_path
 # Parameters:   reading_path    - string    path to S-file
 #               waveforms_path  - string    path to folder with waveform files
+#               slice_duration  - int       duration of the slice in seconds
 #               output_level    - int       0 - min output, 5 - max output, default - 0
 # Returns:      -1                                  -    corrupted file
 #               [(obspy.core.trace.Trace, string)]  -    list of slice tuples: (slice, name of waveform file)
