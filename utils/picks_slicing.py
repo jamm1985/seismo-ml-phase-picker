@@ -54,6 +54,12 @@ def slice_from_reading(reading_path, waveforms_path, output_level=0):
                             year = splits[0]
                             month = splits[1]
                         wav_path = waveforms_path + '/' + year + '/' + month + '/' + name
+
+                        if not os.path.isfile(wav_path):
+                            if output_level >= 2:
+                                print('In file: ' + reading_path + ' pick trace file: ' + wav_path + ' does not exist')
+                                continue
+
                         wav_st = read(wav_path)
                         for trace in wav_st:
                             trace_slice = trace.slice(pick.time)
