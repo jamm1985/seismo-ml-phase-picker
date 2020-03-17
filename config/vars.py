@@ -11,6 +11,8 @@ full_waveforms_path = waveforms_path + db_name
 
 output_level = 5  # 0 - minimal output, 5 - maximum output
 
+slice_duration = 5  # in seconds
+
 help_message = """Usage: seismo-phase-picker [options]
 Options: 
 -h, --help \t\t : print this help message and exit

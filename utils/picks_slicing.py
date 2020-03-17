@@ -11,7 +11,7 @@ import logging
 #               output_level    - int       0 - min output, 5 - max output, default - 0
 # Returns:      -1                                  -    corrupted file
 #               [(obspy.core.trace.Trace, string)]  -    list of slice tuples: (slice, name of waveform file)
-def slice_from_reading(reading_path, waveforms_path, output_level=0):
+def slice_from_reading(reading_path, waveforms_path, slice_duration = 5, output_level=0):
     if output_level >= 5:
         logging.info('Reading file: ' + reading_path)
 
@@ -63,7 +63,7 @@ def slice_from_reading(reading_path, waveforms_path, output_level=0):
 
                         wav_st = read(wav_path)
                         for trace in wav_st:
-                            trace_slice = trace.slice(pick.time)
+                            trace_slice = trace.slice(pick.time, pick.time + slice_duration)
                             if output_level >= 3:
                                 logging.info('\t\t' + str(trace_slice))
                             slice_name_pair = (trace_slice, name)
