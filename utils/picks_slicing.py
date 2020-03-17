@@ -2,6 +2,7 @@ import os
 import sys
 import obspy.io.nordic.core as nordic_reader
 from obspy.core import read
+import logging
 
 
 # Read S-file on reading_path and slice relevant waveforms in waveforms_path
@@ -12,17 +13,17 @@ from obspy.core import read
 #               [(obspy.core.trace.Trace, string)]  -    list of slice tuples: (slice, name of waveform file)
 def slice_from_reading(reading_path, waveforms_path, output_level=0):
     if output_level >= 5:
-        print('Reading file: ' + reading_path)
+        logging.info('Reading file: ' + reading_path)
 
     try:
         events = nordic_reader.read_nordic(reading_path, True)  # Events tuple: (event.Catalog, [waveforms file names])
     except nordic_reader.NordicParsingError as error:
         if output_level >= 2:
-            print('In ' + reading_path + ': ' + str(error))
+            logging.warning('In ' + reading_path + ': ' + str(error))
         return -1
     except ValueError as error:
         if output_level >= 2:
-            print('In ' + reading_path + ': ' + str(error))
+            logging.warning('In ' + reading_path + ': ' + str(error))
         return -1
 
     index = -1
@@ -32,14 +33,14 @@ def slice_from_reading(reading_path, waveforms_path, output_level=0):
         try:
             if len(event.picks) > 0:  # Only for files with picks
                 if output_level >= 3:
-                    print('File: ' + reading_path + ' Event #' + str(index) + ' Picks: ' + str(len(event.picks)))
+                    logging.info('File: ' + reading_path + ' Event #' + str(index) + ' Picks: ' + str(len(event.picks)))
 
                 for pick in event.picks:
                     if output_level >= 3:
-                        print('\t' + str(pick))
+                        logging.info('\t' + str(pick))
 
                     if output_level >= 3:
-                        print('\t' + 'Slices:')
+                        logging.info('\t' + 'Slices:')
 
                     # Read and slice waveform
                     for name in events[1][index]:
@@ -57,20 +58,20 @@ def slice_from_reading(reading_path, waveforms_path, output_level=0):
 
                         if not os.path.isfile(wav_path):
                             if output_level >= 2:
-                                print('In file: ' + reading_path + ' pick trace file: ' + wav_path + ' does not exist')
+                                logging.warning('In file: ' + reading_path + ' pick trace file: ' + wav_path + ' does not exist')
                                 continue
 
                         wav_st = read(wav_path)
                         for trace in wav_st:
                             trace_slice = trace.slice(pick.time)
                             if output_level >= 3:
-                                print('\t\t' + str(trace_slice))
+                                logging.info('\t\t' + str(trace_slice))
                             slice_name_pair = (trace_slice, name)
                             slices.append(slice_name_pair)
 
         except ValueError as error:
             if output_level >= 2:
-                print('In ' + reading_path + ': ' + str(error))
+                logging.warning('In ' + reading_path + ': ' + str(error))
             continue
 
     return slices

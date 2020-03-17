@@ -3,6 +3,7 @@ import obspy.io.nordic.core as nordic_reader
 from obspy.core import read
 import sys
 import getopt
+import logging
 
 import utils.picks_slicing as picks
 import config.vars as config
@@ -15,11 +16,12 @@ if __name__ == "__main__":
     try:
         opts, args = getopt.getopt(argv, 'hs:r:w:', ["help", "save=", "rea=", "wav="])
     except getopt.GetoptError:
-        print(str(getopt.GetoptError))
+        logging.error(str(getopt.GetoptError))
         sys.exit(2)
 
     for opt, arg in opts:
         if opt in ("-h", "--help"):
+            logging.info(config.help_message)
             print(config.help_message)
             sys.exit()
         elif opt in ("-s", "--save"):
@@ -39,9 +41,9 @@ if __name__ == "__main__":
 
     # Print all nordic file names
     if config.output_level >= 5:
-        print('All nordic files:\n')
+        logging.info('All nordic files:\n')
         for x in nordic_file_names:
-            print(x)
+            logging.info(x)
 
     # Get and process all files with picks
     events_total = 0
@@ -50,7 +52,7 @@ if __name__ == "__main__":
     corrupted_files_total = 0
 
     if config.output_level >= 5:
-        print('Reading S-files:\n')
+        logging.info('Reading S-files:\n')
 
     for file in nordic_file_names:
         slices = picks.slice_from_reading(file, config.full_waveforms_path, config.output_level)

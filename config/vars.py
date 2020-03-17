@@ -9,7 +9,7 @@ waveforms_path = path + wav_path
 full_readings_path = readings_path + db_name
 full_waveforms_path = waveforms_path + db_name
 
-output_level = 0  # 0 - minimal output, 5 - maximum output
+output_level = 5  # 0 - minimal output, 5 - maximum output
 
 help_message = """Usage: seismo-phase-picker [options]
 Options: 
