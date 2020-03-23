@@ -5,14 +5,16 @@ from obspy.core import read
 import logging
 
 
-# Read S-file on reading_path and slice relevant waveforms in waveforms_path
-# Parameters:   reading_path    - string    path to S-file
-#               waveforms_path  - string    path to folder with waveform files
-#               slice_duration  - int       duration of the slice in seconds
-#               output_level    - int       0 - min output, 5 - max output, default - 0
-# Returns:      -1                                  -    corrupted file
-#               [(obspy.core.trace.Trace, string)]  -    list of slice tuples: (slice, name of waveform file)
 def slice_from_reading(reading_path, waveforms_path, slice_duration = 5, output_level=0):
+    """
+    Reads S-file on reading_path and slice relevant waveforms in waveforms_path
+    :param reading_path:   string    path to S-file
+    :param waveforms_path: string    path to folder with waveform files
+    :param slice_duration: int       duration of the slice in seconds
+    :param output_level:   int       0 - min output, 5 - max output, default - 0
+    :return: -1                                  -    corrupted file
+             [(obspy.core.trace.Trace, string)]  -    list of slice tuples: (slice, name of waveform file)
+    """
     if output_level >= 5:
         logging.info('Reading file: ' + reading_path)
 
@@ -78,19 +80,26 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration = 5, output_
     return slices
 
 
-# Save trace/name tuples list to a file
-# Parameters:   traces      - [(obspy.core.trace.Trace, string)]    list of slice tuples: (slice, name of waveform file)
-#               save_dir    - string                                save path
-#               file_format - string                                format of same wave file, default - miniSEED "MSEED"
 def save_traces(traces, save_dir, file_format="MSEED"):
+    """
+    Saves trace/name tuples list to a file
+    :param traces:      [(obspy.core.trace.Trace, string)]    list of slice tuples: (slice, name of waveform file)
+    :param save_dir:    string                                save path
+    :param file_format: string                                format of same wave file, default - miniSEED "MSEED"
+    """
     for trace in traces:
         trace[0].write(save_dir + '/' + trace[1], format=file_format)
 
 
-# Normalizes provided path to: /something/something/something
-# Parameters:   path    - string    path to normalize
-# Returns:      string          -   normalized path
+#
+# Parameters:   path    -
+# Returns:
 def normalize_path(path):
+    """
+    Normalizes provided path to: /something/something/something
+    :param path:    string    path to normalize
+    :return:        string    normalized path
+    """
     while path[len(path) - 1] == ' ' or path[len(path) - 1] == '/':
         path = path[:len(path) - 1]
     return path
