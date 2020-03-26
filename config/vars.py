@@ -20,3 +20,5 @@ Options:
 -r, --rea \t arg : s-files database main directory
 -w. --wav \t arg : waveforms database main directory"""
 
+seisan_definitions_path = '/seismo/seisan/DAT/SEISAN.DEF'
+archives_path = '/seismo/archive'
