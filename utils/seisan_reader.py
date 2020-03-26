@@ -6,7 +6,6 @@ from obspy.core import utcdatetime
 import logging
 
 import utils.converter as converter
-import utils.picks_slicing as picks
 
 
 def read_archive_definitions(reading_path, output_level=0):
@@ -126,7 +125,32 @@ def archive_path(archive_definition, year, day, archive_dir='', output_level=0):
     path += day_str
 
     if len(archive_dir) != 0:
-        return picks.normalize_path(archive_dir) + '/' + path
+        return normalize_path(archive_dir) + '/' + path
 
     return path
 
+
+def station_archives(archive_definitions, station):
+    """
+    Returns archive definitions list for provided station
+    :param archive_definitions: list    - list of archive definitions
+    :param station:             string  - station name
+    :return:                    list    - list of archive definitions
+    """
+    search_result = []
+    for x in archive_definitions:
+        if x[0] == station:
+            search_result.append(x)
+
+    return search_result
+
+
+def normalize_path(path):
+    """
+    Normalizes provided path to: /something/something/something
+    :param path:    string    path to normalize
+    :return:        string    normalized path
+    """
+    while path[len(path) - 1] == ' ' or path[len(path) - 1] == '/':
+        path = path[:len(path) - 1]
+    return path
