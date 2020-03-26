@@ -1,12 +1,15 @@
 import os
 import obspy.io.nordic.core as nordic_reader
 from obspy.core import read
-import  obspy
+import obspy
 import sys
 import getopt
 import logging
+from obspy.core import utcdatetime
 
 import utils.picks_slicing as picks
+import utils.seisan_reader as seisan
+import utils.converter as converter
 import config.vars as config
 
 # Main function body
@@ -46,6 +49,9 @@ if __name__ == "__main__":
         for x in nordic_file_names:
             logging.info(x)
 
+    # Get all archive definitions
+    definitions = seisan.read_archive_definitions(config.seisan_definitions_path)
+
     # Get and process all files with picks
     events_total = 0
     no_picks_total = 0
@@ -56,6 +62,6 @@ if __name__ == "__main__":
         logging.info('Reading S-files:\n')
 
     for file in nordic_file_names:
-        slices = picks.slice_from_reading(file, config.full_waveforms_path, config.slice_duration, config.output_level)
+        slices = picks.slice_from_reading(file, config.full_waveforms_path, config.slice_duration, definitions, config.output_level)
         if slices != -1:
             picks.save_traces(slices, config.save_dir)
