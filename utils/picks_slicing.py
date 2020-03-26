@@ -5,13 +5,14 @@ from obspy.core import read
 import logging
 
 
-def slice_from_reading(reading_path, waveforms_path, slice_duration = 5, output_level=0):
+def slice_from_reading(reading_path, waveforms_path, slice_duration = 5, archive_definitions = [], output_level=0):
     """
     Reads S-file on reading_path and slice relevant waveforms in waveforms_path
-    :param reading_path:   string    path to S-file
-    :param waveforms_path: string    path to folder with waveform files
-    :param slice_duration: int       duration of the slice in seconds
-    :param output_level:   int       0 - min output, 5 - max output, default - 0
+    :param reading_path:        string    path to S-file
+    :param waveforms_path:      string    path to folder with waveform files
+    :param slice_duration:      int       duration of the slice in seconds
+    :param archive_definitions: list      list of archive definition tuples (see utils/seisan_reader.py)
+    :param output_level:        int       0 - min output, 5 - max output, default - 0
     :return: -1                                  -    corrupted file
              [(obspy.core.trace.Trace, string)]  -    list of slice tuples: (slice, name of waveform file)
     """
@@ -33,6 +34,7 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration = 5, output_
     slices = []
     for event in events[0].events:
         index += 1
+
         try:
             if len(event.picks) > 0:  # Only for files with picks
                 if output_level >= 3:
@@ -91,9 +93,6 @@ def save_traces(traces, save_dir, file_format="MSEED"):
         trace[0].write(save_dir + '/' + trace[1], format=file_format)
 
 
-#
-# Parameters:   path    -
-# Returns:
 def normalize_path(path):
     """
     Normalizes provided path to: /something/something/something
