@@ -62,6 +62,6 @@ if __name__ == "__main__":
         logging.info('Reading S-files:\n')
 
     for file in nordic_file_names:
-        slices = picks.slice_from_reading(file, config.full_waveforms_path, config.slice_duration, config.output_level)
+        slices = picks.slice_from_reading(file, config.full_waveforms_path, config.slice_duration, definitions, config.output_level)
         if slices != -1:
             picks.save_traces(slices, config.save_dir)

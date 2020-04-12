@@ -1,6 +1,6 @@
 path = '/seismo/seisan/'
 db_name = 'IMGG_'
-save_dir = '/home/chernykh/WAV'
+save_dir = '/home/chernykh/WAV5'
 wav_path = 'WAV/'
 rea_path = 'REA/'
 
@@ -12,6 +12,7 @@ full_waveforms_path = waveforms_path + db_name
 output_level = 5  # 0 - minimal output, 5 - maximum output
 
 slice_duration = 5  # in seconds
+slice_offset = 5  # in seconds
 
 help_message = """Usage: seismo-phase-picker [options]
 Options: 

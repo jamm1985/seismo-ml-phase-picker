@@ -3,6 +3,7 @@ import sys
 import obspy.io.nordic.core as nordic_reader
 from obspy.core import read
 import logging
+import random
 import utils.seisan_reader as seisan
 import config.vars as config
 from pathlib import Path
@@ -99,7 +100,10 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration = 5, archive
 
                         wav_st = read(wav_path)
                         for trace in wav_st:
-                            trace_slice = trace.slice(pick.time, pick.time + slice_duration)
+                            time_shift = random.randrange(1, config.slice_offset)
+                            shifted_time = pick.time - time_shift
+                            end_time = pick.time + slice_duration
+                            trace_slice = trace.slice(shifted_time, end_time)
                             if output_level >= 3:
                                 logging.info('\t\t' + str(trace_slice))
                             slice_name_pair = (trace_slice, name)
