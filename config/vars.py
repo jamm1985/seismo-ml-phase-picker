@@ -23,3 +23,12 @@ Options:
 
 seisan_definitions_path = '/seismo/seisan/DAT/SEISAN.DEF'
 archives_path = '/seismo/archive'
+
+max_noise_picks = 100
+
+start_date = [2014, 1, 1]
+end_date = [2015, 1, 1]
+
+month_length = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+df = 100

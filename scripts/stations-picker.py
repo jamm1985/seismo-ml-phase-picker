@@ -7,7 +7,6 @@ import getopt
 import logging
 import random
 from obspy.core import utcdatetime
-from pprint import pprint
 
 import utils.picks_slicing as picks
 import utils.seisan_reader as seisan
@@ -34,8 +33,6 @@ if __name__ == "__main__":
             config.save_dir = arg
         elif opt in ("-r", "--rea"):
             config.full_readings_path = arg
-        elif opt in ("-w", "--wav"):
-            config.full_waveforms_path = arg
 
     # Initialize random seed with current time
     random.seed()
@@ -54,19 +51,9 @@ if __name__ == "__main__":
         for x in nordic_file_names:
             logging.info(x)
 
-    # Get all archive definitions
-    definitions = seisan.read_archive_definitions(config.seisan_definitions_path)
+    # Get all stations
+    stations = picks.get_stations(nordic_file_names, config.output_level)
 
-    # Get and process all files with picks
-    events_total = 0
-    no_picks_total = 0
-    with_picks_total = 0
-    corrupted_files_total = 0
-
-    if config.output_level >= 5:
-        logging.info('Reading S-files:\n')
-
-    for file in nordic_file_names:
-        slices = picks.slice_from_reading(file, config.full_waveforms_path, config.slice_duration, definitions, config.output_level)
-        if slices != -1:
-            picks.save_traces(slices, config.save_dir)
+    stations = sorted(stations)
+    print('ALL STATIONS')
+    print(str(stations))
