@@ -3,13 +3,77 @@ import sys
 import obspy.io.nordic.core as nordic_reader
 from obspy.core import read
 import logging
+import random
 import utils.seisan_reader as seisan
 import config.vars as config
 from pathlib import Path
 from obspy.io.mseed import InternalMSEEDError
+from obspy.signal.trigger import recursive_sta_lta, trigger_onset
+from pprint import pprint
+import obspy.core.utcdatetime
 
 
-def slice_from_reading(reading_path, waveforms_path, slice_duration = 5, archive_definitions = [], output_level=0):
+def get_stations(nordic_file_names, output_level=0):
+    """
+    Get all stations from provided S-files
+    :param nordic_file_names:
+    :param output_level:
+    :return:
+    """
+    stations = []
+    for file in nordic_file_names:
+        new_stations = get_event_stations(file, output_level)
+
+        if new_stations == -1:
+            continue
+
+        for x in new_stations:
+            if x not in stations:
+                stations.append(x)
+
+    return sorted(stations)
+
+
+def get_event_stations(reading_path, output_level=0):
+    """
+    Reads S-file and gets all stations from it
+    :param reading_path: 
+    :param output_level: 
+    :return: 
+    """
+    if output_level >= 5:
+        logging.info('Reading file: ' + reading_path)
+
+    try:
+        events = nordic_reader.read_nordic(reading_path, True)  # Events tuple: (event.Catalog, [waveforms file names])
+    except nordic_reader.NordicParsingError as error:
+        if output_level >= 2:
+            logging.warning('In ' + reading_path + ': ' + str(error))
+        return -1
+    except ValueError as error:
+        if output_level >= 2:
+            logging.warning('In ' + reading_path + ': ' + str(error))
+        return -1
+    except AttributeError as error:
+        if output_level >= 2:
+            logging.warning('In ' + reading_path + ': ' + str(error))
+        return -1
+
+    stations = []
+    for event in events[0].events:
+        try:
+            if len(event.picks) > 0:  # Only files with picks have stations data
+                for pick in event.picks:
+                    stations.append(pick.waveform_id.station_code)
+        except ValueError as error:
+            if output_level >= 2:
+                logging.warning('In ' + reading_path + ': ' + str(error))
+            continue
+
+    return stations
+
+
+def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_definitions=[], output_level=0):
     """
     Reads S-file on reading_path and slice relevant waveforms in waveforms_path
     :param reading_path:        string    path to S-file
@@ -99,7 +163,10 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration = 5, archive
 
                         wav_st = read(wav_path)
                         for trace in wav_st:
-                            trace_slice = trace.slice(pick.time, pick.time + slice_duration)
+                            time_shift = random.randrange(1, config.slice_offset)
+                            shifted_time = pick.time - time_shift
+                            end_time = pick.time + slice_duration
+                            trace_slice = trace.slice(shifted_time, end_time)
                             if output_level >= 3:
                                 logging.info('\t\t' + str(trace_slice))
                             slice_name_pair = (trace_slice, name)

@@ -19,3 +19,19 @@ def utcdatetime_from_string(string):
         new_string = string + "00"
         return utcdatetime.UTCDateTime(new_string)
     return None
+
+
+def utcdatetime_from_tuple(date):
+    """
+    Creates obspy.core.utcdatetime.UTCDateTime from tuple of integers like (year, month, day)
+    :param date:
+    :return:
+    """
+    line = str(date[0])
+    if date[1] < 10:
+        line += '0'
+    line += str(date[1])
+    if date[2] < 10:
+        line += '0'
+    line += str(date[2])
+    return utcdatetime_from_string(line)

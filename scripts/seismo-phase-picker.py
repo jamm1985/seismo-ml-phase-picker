@@ -5,7 +5,9 @@ import obspy
 import sys
 import getopt
 import logging
+import random
 from obspy.core import utcdatetime
+from pprint import pprint
 
 import utils.picks_slicing as picks
 import utils.seisan_reader as seisan
@@ -34,6 +36,9 @@ if __name__ == "__main__":
             config.full_readings_path = arg
         elif opt in ("-w", "--wav"):
             config.full_waveforms_path = arg
+
+    # Initialize random seed with current time
+    random.seed()
 
     # Get all nordic files in REA
     nordic_dir_data = os.walk(config.full_readings_path)
