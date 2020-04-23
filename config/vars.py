@@ -32,3 +32,6 @@ end_date = [2015, 1, 1]
 month_length = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 df = 100
+
+tolerate_events_in_same_day = False
+event_tolerance = 15
