@@ -28,7 +28,7 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
 
     try:
-        opts, args = getopt.getopt(argv, 'hs:r:w:', ["help", "save=", "rea=", "wav="])
+        opts, args = getopt.getopt(argv, 'hs:r:w:', ["save="])
     except getopt.GetoptError:
         logging.error(str(getopt.GetoptError))
         sys.exit(2)
