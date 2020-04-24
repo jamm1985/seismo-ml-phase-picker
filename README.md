@@ -12,10 +12,28 @@ Usage:
 
 Options: 
 ```
--h, --help \t\t : print this help message and exit
--s, --save \t arg : directory to save picks traces
--r, --rea \t arg : s-files database main directory
--w. --wav \t arg : waveforms database main directory
+-h, --help     : print this help message and exit
+-s, --save arg : directory to save picks traces
+-r, --rea  arg : s-files database main directory
+-w. --wav  arg : waveforms database main directory
+```
+
+### stations-picker
+**stations-picker** is a script which forms a list of stations which registered atleast one pick in selected database.
+This list later might be used by **noise-picker** to reduce an execution time.
+Use ***noise-picker -l \<path\>*** to specify path to stations list. Providing no ***-l*** argument will force script
+to form stations list during execution.
+
+
+Usage:
+
+*python noise-picker [options]*
+
+Options:
+```
+-h, --help     : print this help message and exit
+-s, --save arg : full path for generated stations list file
+-r, --rea  arg : s-files database main directory
 ```
 
 ### noise-picker
@@ -28,6 +46,16 @@ Usage:
 
 Options:
 ```
--h, --help \t\t : print this help message and exit
--s, --save \t arg : directory to save noise picks
+-h, --help          : print this help message and exit
+-s, --save      arg : directory to save noise picks
+-r, --rea       arg : s-files database main directory
+-l, --load      arg : path to stations from which to pick noise (leave empty if want to generate stations list during this script execution)
+-d, --def       arg : full path to SEISAN.DEF (including filename)
+-s, --start     arg : start date in format DD.MM.YYYY
+-e, --end       arg : end date in format DD.MM.YYYY
+-m, --max_picks arg : maximum number of noise picks
+-a, --archives  arg : path to continious archives files directory
+--output_level  arg : logging level from 1 to 5
+--offset        arg : maximum picks offset 
+--duration      arg : pick duration
 ```
