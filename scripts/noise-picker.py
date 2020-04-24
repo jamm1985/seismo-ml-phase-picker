@@ -28,20 +28,54 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
 
     try:
-        opts, args = getopt.getopt(argv, 'hs:r:w:', ["save="])
+        opts, args = getopt.getopt(argv, 'hs:r:l:d:s:e:m:a:', ["help", "save=", "rea=",
+                                                               "load=", "output_level=",
+                                                               "def=", "start=", "end=",
+                                                               "max_picks=", "archives=",
+                                                               "offset=", "duration="])
     except getopt.GetoptError:
         logging.error(str(getopt.GetoptError))
         sys.exit(2)
 
     for opt, arg in opts:
         if opt in ("-h", "--help"):
-            logging.info(config.help_message)
-            print(config.help_message)
+            logging.info(config.noise_help_message)
+            print(config.noise_help_message)
             sys.exit()
         elif opt in ("-s", "--save"):
             config.save_dir = arg
         elif opt in ("-r", "--rea"):
             config.full_readings_path = arg
+        elif opt in ("-l", "--load"):
+            config.stations_load_path = arg
+        elif opt == "--output_level":
+            config.output_level = int(arg)
+        elif opt in ("-d", "--def"):
+            config.seisan_definitions_path = int(arg)
+        elif opt in ("-s", "--start"):
+            string_date = str(arg)
+            day = int(string_date[:2])
+            month = int(string_date[3:5])
+            year = int(string_date[6:])
+            config.start_date[0] = year
+            config.start_date[1] = month
+            config.start_date[2] = day
+        elif opt in ("-e", "--end"):
+            string_date = str(arg)
+            day = int(string_date[:2])
+            month = int(string_date[3:5])
+            year = int(string_date[6:])
+            config.end_date[0] = year
+            config.end_date[1] = month
+            config.end_date[2] = day
+        elif opt in ("-m", "--max_picks"):
+            config.max_noise_picks = int(arg)
+        elif opt in ("-a", "--archives"):
+            config.archives_path = arg
+        elif opt == "--offset":
+            config.slice_offset = int(arg)
+        elif opt == "--duration":
+            config.slice_duration = int(arg)
 
     # Initialize random seed with current time
     random.seed()
@@ -55,7 +89,27 @@ if __name__ == "__main__":
             nordic_file_names.append(x[0] + '/' + file)
 
     # Get all stations
-    stations = picks.get_stations(nordic_file_names, config.output_level)
+    # Try to read stations from config/vars.py stations_load_path
+    if len(config.stations_load_path) > 0:
+        if os.path.isfile(config.stations_load_path):
+            stations = []
+            f = open(config.stations_load_path, 'r')
+            if f.mode == 'r':
+                f1 = f.readlines()
+                for x in f1:
+                    stations.append(x)
+            else:
+                logging.warning('Cannot open stations file, will form stations manually')
+        else:
+            logging.warning('Cannot find stations file, will form stations manually')
+
+    # If no stations found, form stations list
+    if len(stations) == 0:
+        stations = picks.get_stations(nordic_file_names, config.output_level)
+
+    if len(stations) == 0:
+        logging.error('No stations found, aborting')
+        sys.exit()
 
     # Get all archive definitions
     definitions = seisan.read_archive_definitions(config.seisan_definitions_path)
