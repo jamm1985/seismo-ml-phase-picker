@@ -16,8 +16,8 @@ import obspy.core.utcdatetime
 def get_stations(nordic_file_names, output_level=0):
     """
     Get all stations from provided S-files
-    :param nordic_file_names:
-    :param output_level:
+    :param nordic_file_names:   list    List of nordic file full names
+    :param output_level:        int     0 - min output, 5 - max output, default - 0
     :return:
     """
     stations = []
@@ -37,8 +37,8 @@ def get_stations(nordic_file_names, output_level=0):
 def get_event_stations(reading_path, output_level=0):
     """
     Reads S-file and gets all stations from it
-    :param reading_path: 
-    :param output_level: 
+    :param reading_path:    string  path to REA database
+    :param output_level:    int     0 - min output, 5 - max output, default - 0
     :return: 
     """
     if output_level >= 5:
@@ -210,7 +210,7 @@ def get_picks_stations_data(path_array):
 def get_single_picks_stations_data(nordic_path):
     """
     Returns all picks for stations with corresponding pick time in format: [(UTC start time, UTC end time, Station name)]
-    :param nordic_path:
+    :param nordic_path: string  path to REA database
     :return:
     """
     try:
