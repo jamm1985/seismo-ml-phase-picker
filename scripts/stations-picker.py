@@ -19,18 +19,18 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
 
     try:
-        opts, args = getopt.getopt(argv, 'hs:r:w:', ["help", "save=", "rea=", "wav="])
+        opts, args = getopt.getopt(argv, 'hs:r:w:', ["help", "save=", "rea="])
     except getopt.GetoptError:
         logging.error(str(getopt.GetoptError))
         sys.exit(2)
 
     for opt, arg in opts:
         if opt in ("-h", "--help"):
-            logging.info(config.help_message)
-            print(config.help_message)
+            logging.info(config.stations_help_message)
+            print(config.stations_help_message)
             sys.exit()
         elif opt in ("-s", "--save"):
-            config.save_dir = arg
+            config.stations_save_path = arg
         elif opt in ("-r", "--rea"):
             config.full_readings_path = arg
 
@@ -55,5 +55,14 @@ if __name__ == "__main__":
     stations = picks.get_stations(nordic_file_names, config.output_level)
 
     stations = sorted(stations)
-    print('ALL STATIONS')
-    print(str(stations))
+
+    if os.path.isfile(config.stations_save_path):
+        logging.error('File already exists')
+        sys.exit(2)
+
+    f = open(config.stations_save_path, 'w')
+
+    for x in stations:
+        f.write(x + '\r\n')
+
+    f.close()

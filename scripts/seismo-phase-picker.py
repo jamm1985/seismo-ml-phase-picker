@@ -27,8 +27,8 @@ if __name__ == "__main__":
 
     for opt, arg in opts:
         if opt in ("-h", "--help"):
-            logging.info(config.help_message)
-            print(config.help_message)
+            logging.info(config.picks_help_message)
+            print(config.picks_help_message)
             sys.exit()
         elif opt in ("-s", "--save"):
             config.save_dir = arg

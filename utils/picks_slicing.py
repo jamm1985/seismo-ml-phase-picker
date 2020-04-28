@@ -16,8 +16,8 @@ import obspy.core.utcdatetime
 def get_stations(nordic_file_names, output_level=0):
     """
     Get all stations from provided S-files
-    :param nordic_file_names:
-    :param output_level:
+    :param nordic_file_names:   list    List of nordic file full names
+    :param output_level:        int     0 - min output, 5 - max output, default - 0
     :return:
     """
     stations = []
@@ -37,8 +37,8 @@ def get_stations(nordic_file_names, output_level=0):
 def get_event_stations(reading_path, output_level=0):
     """
     Reads S-file and gets all stations from it
-    :param reading_path: 
-    :param output_level: 
+    :param reading_path:    string  path to REA database
+    :param output_level:    int     0 - min output, 5 - max output, default - 0
     :return: 
     """
     if output_level >= 5:
@@ -197,3 +197,47 @@ def save_traces(traces, save_dir, file_format="MSEED"):
             trace[0].write(save_dir + '/' + file_name, format=file_format)
         except InternalMSEEDError:
             logging.warning(str(InternalMSEEDError))
+
+
+def get_picks_stations_data(path_array):
+    data = []
+    for x in path_array:
+        data.extend(get_single_picks_stations_data(x))
+
+    return data
+
+
+def get_single_picks_stations_data(nordic_path):
+    """
+    Returns all picks for stations with corresponding pick time in format: [(UTC start time, UTC end time, Station name)]
+    :param nordic_path: string  path to REA database
+    :return:
+    """
+    try:
+        events = nordic_reader.read_nordic(nordic_path, True)  # Events tuple: (event.Catalog, [waveforms file names])
+    except nordic_reader.NordicParsingError as error:
+        if config.output_level >= 2:
+            logging.warning('In ' + nordic_path + ': ' + str(error))
+        return -1
+    except ValueError as error:
+        if config.output_level >= 2:
+            logging.warning('In ' + nordic_path + ': ' + str(error))
+        return -1
+
+    index = -1
+    slices = []
+    for event in events[0].events:
+        index += 1
+
+        try:
+            if len(event.picks) > 0:  # Only for files with picks
+                for pick in event.picks:
+                    slice_station = (pick.time, pick.waveform_id.station_code)
+                    slices.append(slice_station)
+
+        except ValueError as error:
+            if config.output_level >= 2:
+                logging.warning('In ' + nordic_path + ': ' + str(error))
+            continue
+
+    return slices
