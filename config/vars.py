@@ -23,6 +23,8 @@ slice_duration = 4  # Slice duration in seconds
 slice_offset = 5    # Max value of random slice offset in seconds (negatively shifts start of waveform
 #                      ..slicing from 1 to slice_offset seconds)
 
+archive_channels_order = ['N', 'E', 'Z']  # Specifies channels to pick
+
 # NOISE PICKING
 max_noise_picks = 100  # Max amount of noise examples to pick per script run
 

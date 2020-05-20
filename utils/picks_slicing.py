@@ -121,12 +121,14 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                         station = pick.waveform_id.station_code
                         station_archives = seisan.station_archives(archive_definitions, station)
 
+                        channel_slices = []
                         for x in station_archives:
                             if x[4] <= pick.time:
                                 if x[5] is not None and pick.time > x[5]:
                                     continue
                                 else:
-                                    archive_file_path = seisan.archive_path(x, x[4].year, x[4].julday, config.archives_path, output_level)
+                                    archive_file_path = seisan.archive_path(x, x[4].year, x[4].julday,
+                                                                            config.archives_path, output_level)
                                     if os.path.isfile(archive_file_path):
                                         found_archive = True
                                         arch_st = read(archive_file_path)
@@ -136,12 +138,16 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                                                 logging.info('\t\t' + str(trace_slice))
 
                                             trace_file = x[0] + str(x[4].year) + str(x[4].julday) + x[1] + x[2] + x[3]
-                                            slice_name_pair = (trace_slice, trace_file)
-                                            slices.append(slice_name_pair)
+                                            slice_name_station_channel = (trace_slice, trace_file, x[0], x[1])
+                                            channel_slices.append(slice_name_station_channel)
 
                     # Read and slice waveform
                     if found_archive:
+                        slices.append(channel_slices)
                         continue
+
+                    if True:
+                        continue  # For now ignore WAV database
 
                     for name in events[1][index]:
                         # Get WAV path from REA path
@@ -158,7 +164,8 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
 
                         if not os.path.isfile(wav_path):
                             if output_level >= 2:
-                                logging.warning('In file: ' + reading_path + ' pick trace file: ' + wav_path + ' does not exist')
+                                logging.warning(
+                                    'In file: ' + reading_path + ' pick trace file: ' + wav_path + ' does not exist')
                                 continue
 
                         wav_st = read(wav_path)
@@ -177,7 +184,7 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                 logging.warning('In ' + reading_path + ': ' + str(error))
             continue
 
-    return slices
+    return sort_slices(slices)
 
 
 def save_traces(traces, save_dir, file_format="MSEED"):
@@ -241,3 +248,49 @@ def get_single_picks_stations_data(nordic_path):
             continue
 
     return slices
+
+
+def sort_slices(slices):
+    """
+    Sorts slices by station and then by channel (but it removes all non-unique station, channel pairs)
+    :param slices: slices in format: [[trace, filename, station, channel], ...]
+    :return: Sorted slices in the same format: [[trace, filename, station, channel], ...]
+    """
+    result = []
+    for x in slices:
+        sorted = []
+        semi_sorted = []
+        # Sort by stations
+        x.sort(key=lambda y: y[2])
+
+        # Sort by channels
+        found_channels = []
+        current_station = x[0][2]
+        for y in x:
+            if current_station != y[2]:
+                current_station = y[2]
+                found_channels = []
+            if y[3][-1] in found_channels:
+                continue
+            if y[3][-1] in config.archive_channels_order:
+                found_channels.append(y[3][-1])
+                semi_sorted.append(y)
+
+        current_station = ""
+        index = 0
+        for y in semi_sorted:
+            if y[2] != current_station:
+                current_station = y[2]
+                for channel in config.archive_channels_order:
+                    sorting_index = index
+                    while sorting_index < len(semi_sorted) and semi_sorted[sorting_index][2] == current_station:
+                        if semi_sorted[sorting_index][3][-1] == channel:
+                            sorted.append(semi_sorted[sorting_index])
+                            break
+                        sorting_index += 1
+            index += 1
+
+        result.append(sorted)
+        print(str(sorted))
+
+    return result
