@@ -1,37 +1,45 @@
-path = '/seismo/seisan/'
-db_name = 'IMGG_'
-save_dir = '/home/chernykh/WAV5'
-wav_path = 'WAV/'
-rea_path = 'REA/'
-
-readings_path = path + rea_path
-waveforms_path = path + wav_path
-full_readings_path = readings_path + db_name
-full_waveforms_path = waveforms_path + db_name
-
-output_level = 5  # 0 - minimal output, 5 - maximum output
-
-slice_duration = 4  # in seconds
-slice_offset = 5  # in seconds (negatively shifts start of waveform slicing from 1 to slice_offset seconds)
-
-seisan_definitions_path = '/seismo/seisan/DAT/SEISAN.DEF'
-archives_path = '/seismo/archive'
-
-max_noise_picks = 100
-
-start_date = [2014, 1, 1]
-end_date = [2015, 1, 1]
-
-month_length = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-
-df = 100
-
-tolerate_events_in_same_day = False
-event_tolerance = 15
-
-stations_save_path = '/home/chernykh/WAV5/stations'
+# PATH VARIABLES
+path = '/seismo/seisan/'  # Seisan root
+db_name = 'IMGG_'  # Database name
+save_dir = '/home/chernykh/WAV5'  # Where to save picks
+wav_path = 'WAV/'  # WAV files subdir name
+rea_path = 'REA/'  # S-files subdir name
+seisan_definitions_path = '/seismo/seisan/DAT/SEISAN.DEF'  # Path to def file (used for finding stations definitions)
+archives_path = '/seismo/archive'                    # Path to archives
+stations_save_path = '/home/chernykh/WAV5/stations'  # Where to save stations list (station-picker)
 stations_load_path = ''  # Leave empty if want to generate stations list in process
 
+# CALCULATED PATH VARIABLES
+readings_path = path + rea_path  # Partial path to S-files
+waveforms_path = path + wav_path  # Partial path to WAV files
+full_readings_path = readings_path + db_name  # Full path to S-files
+full_waveforms_path = waveforms_path + db_name  # Full path to WAV files
+
+# OUTPUT PARAMETERS
+output_level = 5  # 0 - minimal output, 5 - maximum output
+
+# SLICING PARAMETERS
+slice_duration = 4  # Slice duration in seconds
+slice_offset = 5    # Max value of random slice offset in seconds (negatively shifts start of waveform
+#                      ..slicing from 1 to slice_offset seconds)
+
+# NOISE PICKING
+max_noise_picks = 100  # Max amount of noise examples to pick per script run
+
+start_date = [2014, 1, 1]  # Starting date for noise picker
+end_date = [2015, 1, 1]    # End date for noise picker
+
+tolerate_events_in_same_day = False  # If False - noise picker will ignore days when actual recorded events happend
+event_tolerance = 15  # Number of seconds around noise trace which should not contain any events
+
+# TO-DO: move month length to utils/ as function
+month_length = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+# HDF5 PARAMETERS
+required_df = 100  # Required frequency of hdf5 traces for GPD
+required_sample_length = 400  # Required amount of samples (basically length*frequency)
+
+# MESSAGES
 picks_help_message = """Usage: python seismo-phase-picker.py [options]
 Options: 
 -h, --help \t\t : print this help message and exit
@@ -63,3 +71,4 @@ Options:
 -s, --save \t arg : full path for generated stations list file
 -r, --rea \t arg : s-files database main directory
 This script generates list of all stations, which registered atleast one event in current database."""
+
