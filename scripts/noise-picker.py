@@ -90,6 +90,7 @@ if __name__ == "__main__":
 
     # Get all stations
     # Try to read stations from config/vars.py stations_load_path
+    stations = []
     if len(config.stations_load_path) > 0:
         if os.path.isfile(config.stations_load_path):
             stations = []

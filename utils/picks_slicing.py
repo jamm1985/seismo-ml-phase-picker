@@ -138,7 +138,8 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                                                 logging.info('\t\t' + str(trace_slice))
 
                                             trace_file = x[0] + str(x[4].year) + str(x[4].julday) + x[1] + x[2] + x[3]
-                                            slice_name_station_channel = (trace_slice, trace_file, x[0], x[1])
+                                            event_id = x[0] + str(x[4].year) + str(x[4].julday) + x[2] + x[3]
+                                            slice_name_station_channel = (trace_slice, trace_file, x[0], x[1], event_id)
                                             channel_slices.append(slice_name_station_channel)
 
                     # Read and slice waveform
@@ -194,16 +195,34 @@ def save_traces(traces, save_dir, file_format="MSEED"):
     :param save_dir:    string                                save path
     :param file_format: string                                format of same wave file, default - miniSEED "MSEED"
     """
-    for trace in traces:
-        try:
-            file_name = trace[1]
-            index = 0
-            while os.path.isfile(save_dir + '/' + file_name):
-                file_name = trace[1] + str(index)
-                index += 1
-            trace[0].write(save_dir + '/' + file_name, format=file_format)
-        except InternalMSEEDError:
-            logging.warning(str(InternalMSEEDError))
+    for event in traces:
+        for x in event:
+            try:
+                if config.dir_per_event == True:
+                    file_name = x[1]
+                    dir_name = x[4]
+                    index = 0
+                    while os.path.isdir(save_dir + '/' + dir_name):
+                        dir_name = x[4] + str(index)
+                        index += 1
+                    os.mkdir(save_dir + '/' + dir_name)
+
+                    index = 0
+                    while os.path.isfile(save_dir + '/' + dir_name + '/' + file_name):
+                        file_name = x[1] + str(index)
+                        index += 1
+                    x[0].write(save_dir + '/' + dir_name + '/' + file_name, format=file_format)
+                else:
+                    file_name = x[1]
+                    index = 0
+                    while os.path.isfile(save_dir + '/' + file_name):
+                        file_name = x[1] + str(index)
+                        index += 1
+                    x[0].write(save_dir + '/' + file_name, format=file_format)
+            except InternalMSEEDError:
+                logging.warning(str(InternalMSEEDError))
+            except OSError:
+                logging.warning(str(OSError))
 
 
 def get_picks_stations_data(path_array):
