@@ -97,6 +97,10 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
         if output_level >= 2:
             logging.warning('In ' + reading_path + ': ' + str(error))
         return -1
+    except AttributeError as error:
+        if output_level >= 2:
+            logging.warning('In ' + reading_path + ': ' + str(error))
+        return -1
 
     index = -1
     slices = []
@@ -119,7 +123,6 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
 
                     if output_level >= 3:
                         logging.info('\t' + 'Slices:')
-
 
                     # Checking archives
                     found_archive = False
