@@ -136,12 +136,17 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                                 if x[5] is not None and pick.time > x[5]:
                                     continue
                                 else:
-                                    archive_file_path = seisan.archive_path(x, x[4].year, x[4].julday,
+                                    archive_file_path = seisan.archive_path(x, pick.time.year, pick.time.julday,
                                                                             config.archives_path, output_level)
                                     if os.path.isfile(archive_file_path):
-                                        found_archive = True
                                         arch_st = read(archive_file_path)
                                         for trace in arch_st:
+                                            if trace.stats.starttime > pick.time or pick.time + slice_duration >= trace.stats.endtime:
+                                                logging.info('\t\tArchive ' + archive_file_path +
+                                                             ' does not cover required slice interval')
+                                                continue
+
+                                            found_archive = True
                                             trace_slice = trace.slice(pick.time, pick.time + slice_duration)
                                             if output_level >= 3:
                                                 logging.info('\t\t' + str(trace_slice))
@@ -150,6 +155,7 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                                             event_id = x[0] + str(x[4].year) + str(x[4].julday) + x[2] + x[3]
                                             slice_name_station_channel = (trace_slice, trace_file, x[0], x[1], event_id,
                                                                           pick.phase_hint)
+
                                             channel_slices.append(slice_name_station_channel)
 
                     # Read and slice waveform
@@ -228,6 +234,7 @@ def save_traces(traces, save_dir, file_format="MSEED"):
                     while os.path.isfile(save_dir + '/' + file_name):
                         file_name = x[1] + '.' + x[5] + '.' + str(index)
                         index += 1
+
                     x[0].write(save_dir + '/' + file_name, format=file_format)
             except InternalMSEEDError:
                 logging.warning(str(InternalMSEEDError))
@@ -320,6 +327,5 @@ def sort_slices(slices):
             index += 1
 
         result.append(sorted)
-        print(str(sorted))
 
     return result
