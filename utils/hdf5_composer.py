@@ -32,8 +32,49 @@ def process(filename, file_format="MSEED"):
     :param file_format: string - format of the file, default: miniSEED "MSEED"
     :return: list of samples
     """
-    return []
+    st = read(filename, file_format)
 
+    # Resampling
+    if st[0].stats.sampling_rate != config.required_df:
+        resample(st)
+
+    # Detrend
+    if config.detrend:
+        st.detrend(type='linear')
+
+    # High-pass filtering
+    if config.highpass_filter_df > 1:
+        st.filter("highpass", freq=config.highpass_filter_df)
+
+    # Normalize
+    st.normalize(global_max=config.global_max_normalizing)
+
+    # Check that size is accurate
+    resize(st, config.required_trace_length)
+
+    return st[0].data
+
+def resample(stream, df):
+    """
+    Resamples trace to required sampling rate
+    :param trace: trace to resample
+    :param df:
+    :return:
+    """
+    stream.resample(df)
+
+def resize(stream, size):
+    """
+    Cuts list of data size
+    :param data:
+    :return:
+    """
+    if len(stream[0].data) == size:
+        return
+
+    if len(stream[0]) > size:
+        stream[0].data = stream[0].data[:size]
+    # else: throw exception?
 
 def sample(stream):
     """

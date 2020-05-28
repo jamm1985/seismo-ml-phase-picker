@@ -5,7 +5,7 @@ wav_path = 'WAV/'  # WAV files subdir name
 rea_path = 'REA/'  # S-files subdir name
 seisan_definitions_path = '/seismo/seisan/DAT/SEISAN.DEF'  # Path to def file (used for finding stations definitions)
 archives_path = '/seismo/archive'                    # Path to archives
-stations_save_path = '/home/chernykh/WAV5/stations'  # Where to save stations list (station-picker)
+stations_save_path = '/home/chernykh/WAV6/stations'  # Where to save stations list (station-picker)
 stations_load_path = ''  # Leave empty if want to generate stations list in process
 
 # CALCULATED GENERAL PATH VARIABLES
@@ -26,7 +26,7 @@ archive_channels_order = ['N', 'E', 'Z']  # Specifies channels to pick
 
 dir_per_event = True  # If True - creates subdir for every event
 
-save_dir = '/home/chernykh/WAV5'  # Where to save picks
+save_dir = '/home/chernykh/WAV6'  # Where to save picks
 
 # NOISE PICKING
 max_noise_picks = 100  # Max amount of noise examples to pick per script run
@@ -48,17 +48,23 @@ month_length = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 hdf5_file_name = '/home/chernykh/wav.hdf5'  # Name to save composed hdf5 file under
 
 required_df = 100  # Required frequency of hdf5 traces for GPD
-required_sample_length = 400  # Required amount of samples (basically length*frequency)
+required_trace_length = 400  # Required amount of samples (basically length*frequency)
+
+detrend = True
+
+highpass_filter_df = 2
+
+global_max_normalizing = True
 
 hdf5_array_length = 100  # Amount of S/P-picks and noise picks
 
 p_picks_dir_per_event = True  # Are p-wave picks organized with sub-dirs for each event
-p_picks_path = '~/WAV5/'      # Path to p-wave picks root
+p_picks_path = '~/WAV6/'      # Path to p-wave picks root
 p_file_extension = 'P'        # File extension of p-wave picks
 p_file_postfix_indexing = True  # If True - p-wave pick files can have indexing after extension (e.g. "filename.P.102")
 
 s_picks_dir_per_event = True  # Are s-wave picks organized with sub-dirs for each event
-s_picks_path = '~/WAV5/'      # Path to s-wave picks root
+s_picks_path = '~/WAV6/'      # Path to s-wave picks root
 s_file_extension = 'S'        # File extension of s-wave picks
 s_file_postfix_indexing = True  # If True - s-wave pick files can have indexing after extension (e.g. "filename.S.102")
 
