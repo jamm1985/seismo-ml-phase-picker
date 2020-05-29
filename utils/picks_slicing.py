@@ -156,6 +156,18 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                                             slice_name_station_channel = (trace_slice, trace_file, x[0], x[1], event_id,
                                                                           pick.phase_hint)
 
+                                            if len(trace_slice.data) == 0:
+                                                print('SAMPLES: ' + str(len(trace_slice.data)))
+                                                print('TRACE: ' + str(trace_slice))
+                                                print('SLICING: ' + str(pick.time) + '  ' + str(
+                                                    pick.time + slice_duration)
+                                                      + ' slice ' + str(slice_duration))
+                                                print('ORIGINAL TRACE: ' + str(trace))
+                                                print('ARCHIVE INFO: ' + str(x[4]) + '  ' + str(x[5]))
+                                                print('    ' + str(x))
+                                                print('ARCHIVE: ' + archive_file_path)
+                                                print('\n\n')
+
                                             channel_slices.append(slice_name_station_channel)
 
                     # Read and slice waveform
@@ -212,17 +224,17 @@ def save_traces(traces, save_dir, file_format="MSEED"):
     :param file_format: string                                format of same wave file, default - miniSEED "MSEED"
     """
     for event in traces:
+        if config.dir_per_event and len(event) > 0:
+            dir_name = event[0][4]
+            index = 0
+            while os.path.isdir(save_dir + '/' + dir_name):
+                dir_name = event[0][4] + str(index)
+                index += 1
+            os.mkdir(save_dir + '/' + dir_name)
         for x in event:
             try:
                 if config.dir_per_event:
-                    file_name = x[1] + '.' + x[5]
-                    dir_name = x[4]
-                    index = 0
-                    while os.path.isdir(save_dir + '/' + dir_name):
-                        dir_name = x[4] + str(index)
-                        index += 1
-                    os.mkdir(save_dir + '/' + dir_name)
-
+                    file_name = x[1] + '.' + x[3] + '.' + x[5]
                     index = 0
                     while os.path.isfile(save_dir + '/' + dir_name + '/' + file_name):
                         file_name = x[1] + '.' + x[5] + '.' + str(index)
