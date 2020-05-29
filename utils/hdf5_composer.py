@@ -11,6 +11,8 @@ from obspy.io.mseed import InternalMSEEDError
 from obspy.signal.trigger import recursive_sta_lta, trigger_onset
 from pprint import pprint
 import obspy.core.utcdatetime
+import h5py
+import random
 
 
 def compose(filename, p_picks, s_picks, noise_picks):
@@ -22,6 +24,17 @@ def compose(filename, p_picks, s_picks, noise_picks):
     :param noise_picks: list   - list of processes noise picks
     :return:
     """
+    # Creating datasets
+    initial_set = []
+
+    index = 0
+    while index < config.hdf5_array_length:
+        p_list = [p_picks[index], ]
+
+    file = h5py.File(filename, "w")
+
+    dset = file.create_dataset('X', (100, 400, 3), dtype='f')
+
     return None
 
 
@@ -36,7 +49,7 @@ def process(filename, file_format="MSEED"):
 
     # Resampling
     if st[0].stats.sampling_rate != config.required_df:
-        resample(st)
+        resample(st, config.required_df)
 
     # Detrend
     if config.detrend:
@@ -54,6 +67,7 @@ def process(filename, file_format="MSEED"):
 
     return st[0].data
 
+
 def resample(stream, df):
     """
     Resamples trace to required sampling rate
@@ -62,6 +76,7 @@ def resample(stream, df):
     :return:
     """
     stream.resample(df)
+
 
 def resize(stream, size):
     """
@@ -75,6 +90,7 @@ def resize(stream, size):
     if len(stream[0]) > size:
         stream[0].data = stream[0].data[:size]
     # else: throw exception?
+
 
 def sample(stream):
     """

@@ -36,43 +36,34 @@ if __name__ == "__main__":
 
     # Get P picks
     if config.p_picks_dir_per_event:
-        files = utils.get_files(config.p_picks_path, 1, 1, '*.P*')
+        files = utils.get_files(config.p_picks_path, 1, 1, r'\.P', config.hdf5_array_length)
     else:
-        files = utils.get_files(config.p_picks_path, 0, 0, '*.P*')
+        files = utils.get_files(config.p_picks_path, 0, 0, r'\.P', config.hdf5_array_length)
 
     for file in files:
         if len(p_picks) >= config.hdf5_array_length:
             break
-        try:
-            pick = composer.process(file)
-            p_picks.append(pick)
-        except Exception:
-            continue
+        pick = composer.process(file)
+        p_picks.append(pick)
 
     # Get S picks
     if config.s_picks_dir_per_event:
-        files = utils.get_files(config.s_picks_path, 1, 1, '*.SP*')
+        files = utils.get_files(config.s_picks_path, 1, 1, r'\.S', config.hdf5_array_length)
     else:
-        files = utils.get_files(config.s_picks_path, 0, 0, '*.S*')
+        files = utils.get_files(config.s_picks_path, 0, 0, r'\.S', config.hdf5_array_length)
 
     for file in files:
         if len(s_picks) >= config.hdf5_array_length:
             break
-        try:
-            pick = composer.process(file)
-            s_picks.append(pick)
-        except Exception:
-            continue
+        pick = composer.process(file)
+        s_picks.append(pick)
 
     # Get noise picks
-    files = utils.get_files(config.noise_picks_path, 0, 0)
+    files = utils.get_files(config.noise_picks_hdf5_path, 0, 0, max=config.hdf5_array_length)
     for file in files:
         if len(noise_picks) >= config.hdf5_array_length:
             break
-        try:
-            pick = composer.process(file)
-            noise_picks.append(pick)
-        except Exception:
-            continue
+        pick = composer.process(file)
+        noise_picks.append(pick)
 
-    composer.compose(config.hdf5_file_name)
+    composer.compose(config.hdf5_file_name, p_picks, s_picks, noise_picks)
