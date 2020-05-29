@@ -50,25 +50,30 @@ hdf5_file_name = '/home/chernykh/wav.hdf5'  # Name to save composed hdf5 file un
 required_df = 100  # Required frequency of hdf5 traces for GPD
 required_trace_length = 400  # Required amount of samples (basically length*frequency)
 
-detrend = True
-
-highpass_filter_df = 2
-
-global_max_normalizing = True
-
 hdf5_array_length = 100  # Amount of S/P-picks and noise picks
 
+# Codes to be used in Y dataset to characterize p/s/noise picks
+p_code = 1  # Code for p-wave picks
+s_code = 2  # Code for s-wave picks
+noise_code = 3  # Code for noise picks
+
+detrend = True  # If True, perform detrend
+
+highpass_filter_df = 2  # High-pass filter frequency, if 1, filter disabled
+
+global_max_normalizing = True  # If true, will normalize waveform by all traces in stream
+
 p_picks_dir_per_event = True  # Are p-wave picks organized with sub-dirs for each event
-p_picks_path = '~/WAV6/'      # Path to p-wave picks root
+p_picks_path = '/home/chernykh/WAV6/'      # Path to p-wave picks root
 p_file_extension = 'P'        # File extension of p-wave picks
 p_file_postfix_indexing = True  # If True - p-wave pick files can have indexing after extension (e.g. "filename.P.102")
 
 s_picks_dir_per_event = True  # Are s-wave picks organized with sub-dirs for each event
-s_picks_path = '~/WAV6/'      # Path to s-wave picks root
+s_picks_path = '/home/chernykh/WAV6/'      # Path to s-wave picks root
 s_file_extension = 'S'        # File extension of s-wave picks
 s_file_postfix_indexing = True  # If True - s-wave pick files can have indexing after extension (e.g. "filename.S.102")
 
-noise_picks_hdf5_path = ''  # Path to noise picks
+noise_picks_hdf5_path = '/home/chernykh/WAV6'  # Path to noise picks
 if len(noise_picks_hdf5_path) == 0:  # Grab path from noise-picker parameters if not set
     noise_picks_path = noise_save_dir
 
