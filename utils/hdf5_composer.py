@@ -13,6 +13,7 @@ from pprint import pprint
 import obspy.core.utcdatetime
 import h5py
 import random
+import re
 
 
 def compose(filename, p_picks, s_picks, noise_picks):
@@ -27,13 +28,66 @@ def compose(filename, p_picks, s_picks, noise_picks):
     # Creating datasets
     initial_set = []
 
+    X = []
+    Y = []
+
     index = 0
-    while index < config.hdf5_array_length:
-        p_list = [p_picks[index], ]
+    local_index = 0
+    while index < config.hdf5_array_length and local_index < len(p_picks):
+        transposed_list = []
+        inner_index = 0
+        while inner_index < len(p_picks[local_index][0]) and \
+                inner_index < len(p_picks[local_index][1]) and \
+                inner_index < len(p_picks[local_index][2]):
+            transposed_list.append([p_picks[local_index][0][inner_index],
+                                    p_picks[local_index][1][inner_index],
+                                    p_picks[local_index][2][inner_index]])
+            inner_index += 1
+        X.append(transposed_list)
+        Y.append(1)
+        index += 1
+        local_index += 1
+
+    index = 0
+    local_index = 0
+    while index < config.hdf5_array_length and local_index < len(s_picks):
+        transposed_list = []
+        inner_index = 0
+        while inner_index < len(s_picks[local_index][0]) and \
+                inner_index < len(s_picks[local_index][1]) and \
+                inner_index < len(s_picks[local_index][2]):
+            transposed_list.append([s_picks[local_index][0][inner_index],
+                                    s_picks[local_index][1][inner_index],
+                                    s_picks[local_index][2][inner_index]])
+            inner_index += 1
+        X.append(transposed_list)
+        Y.append(2)
+        index += 1
+        local_index += 1
+
+    index = 0
+    local_index = 0
+    while index < config.hdf5_array_length and local_index < len(noise_picks):
+        transposed_list = []
+        inner_index = 0
+        while inner_index < len(noise_picks[local_index][0]) and \
+                inner_index < len(noise_picks[local_index][1]) and \
+                inner_index < len(noise_picks[local_index][2]):
+            transposed_list.append([noise_picks[local_index][0][inner_index],
+                                    noise_picks[local_index][1][inner_index],
+                                    noise_picks[local_index][2][inner_index]])
+            inner_index += 1
+        X.append(transposed_list)
+        Y.append(3)
+        index += 1
+        local_index += 1
 
     file = h5py.File(filename, "w")
 
-    dset = file.create_dataset('X', (100, 400, 3), dtype='f')
+    dset = file.create_dataset('X', data=X, dtype='f')
+    dset = file.create_dataset('Y', data=Y, dtype='f')
+
+    file.close()
 
     return None
 
@@ -47,6 +101,13 @@ def process(filename, file_format="MSEED"):
     """
     st = read(filename, file_format)
 
+    # Is acceleration based
+    is_acc = False
+    regex_filter = re.search(r'\.[a-zA-Z]{3}', filename)
+    type_of_file = regex_filter.group(0)[1]
+    if type_of_file == 'H':
+        is_acc = True
+
     # Resampling
     if st[0].stats.sampling_rate != config.required_df:
         resample(st, config.required_df)
@@ -54,6 +115,11 @@ def process(filename, file_format="MSEED"):
     # Detrend
     if config.detrend:
         st.detrend(type='linear')
+
+    # Acceleration to velocity
+    if is_acc:
+        for trace in st.traces:
+            trace.integrate()
 
     # High-pass filtering
     if config.highpass_filter_df > 1:

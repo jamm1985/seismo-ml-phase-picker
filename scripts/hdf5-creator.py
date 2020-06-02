@@ -40,11 +40,14 @@ if __name__ == "__main__":
     else:
         files = utils.get_files(config.p_picks_path, 0, 0, r'\.P', config.hdf5_array_length)
 
-    for file in files:
+    for file_list in files:
         if len(p_picks) >= config.hdf5_array_length:
             break
-        pick = composer.process(file)
-        p_picks.append(pick)
+        pick_list = []
+        for file in file_list:
+            pick = composer.process(file)
+            pick_list.append(pick)
+        p_picks.append(pick_list)
 
     # Get S picks
     if config.s_picks_dir_per_event:
@@ -55,15 +58,21 @@ if __name__ == "__main__":
     for file in files:
         if len(s_picks) >= config.hdf5_array_length:
             break
-        pick = composer.process(file)
-        s_picks.append(pick)
+        pick_list = []
+        for file in file_list:
+            pick = composer.process(file)
+            pick_list.append(pick)
+        s_picks.append(pick_list)
 
     # Get noise picks
     files = utils.get_files(config.noise_picks_hdf5_path, 0, 0, max=config.hdf5_array_length)
     for file in files:
         if len(noise_picks) >= config.hdf5_array_length:
             break
-        pick = composer.process(file)
-        noise_picks.append(pick)
+        pick_list = []
+        for file in file_list:
+            pick = composer.process(file)
+            pick_list.append(pick)
+        noise_picks.append(pick_list)
 
     composer.compose(config.hdf5_file_name, p_picks, s_picks, noise_picks)

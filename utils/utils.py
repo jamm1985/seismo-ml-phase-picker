@@ -3,7 +3,7 @@ import sys
 import re
 
 
-def get_files(path, min_depth=0, max_depth=0, exp=r'', max=-1):
+def get_files(path, min_depth=0, max_depth=0, exp=r'', max=-1, dir_per_event = True):
     """
     Returns list of all files in provided path
     Generates exception:
@@ -15,22 +15,39 @@ def get_files(path, min_depth=0, max_depth=0, exp=r'', max=-1):
              except <path> parameter and filename (e.g. <path> = /home/user/, full path = /home/user/dir/dir2/path,
              then relative base = dir/dir2/)
     """
-    all_files = os.walk(path)
+
     result_files = []
+    total_files = 0
+    if dir_per_event:
+        dirs = os.listdir(path)
 
-    total = 0
-    total_2 = 0
-    for x in all_files:
-        total += 1
-        for file in x[2]:
-            total_2 += 1
-            if max != -1 and len(result_files) >= max:
-                return result_files
+        for directory in dirs:
+            files_in_dir = []
+            all_files = os.walk(path + directory + '/')
+            for x in all_files:
+                for file in x[2]:
+                    if max != -1 and total_files >= max:
+                        break
 
-            reg_result = re.search(exp, file)
-            if reg_result is None:
-                continue
+                    reg_result = re.search(exp, file)
+                    if reg_result is None:
+                        continue
 
-            result_files.append(x[0] + '/' + file)
+                    files_in_dir.append(x[0] + file)
+                    total_files += 1
+
+            if len(files_in_dir) == 3:
+                regex_filter = re.search(r'\.[a-zA-Z]{3}', files_in_dir[0])
+                type_of_file = regex_filter.group(0)[1]
+
+                pattern = '\.' + type_of_file + '[a-zA-Z]{2}'
+                pattern = re.compile(pattern)
+                regex_filter2 = re.search(pattern, files_in_dir[1])
+                regex_filter3 = re.search(pattern, files_in_dir[2])
+
+                if regex_filter2 is not None and regex_filter3 is not None:
+                    result_files.append(files_in_dir)
+            if max != -1 and total_files >= max:
+                break
 
     return result_files
