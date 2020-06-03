@@ -44,7 +44,7 @@ def compose(filename, p_picks, s_picks, noise_picks):
                                     p_picks[local_index][2][inner_index]])
             inner_index += 1
         X.append(transposed_list)
-        Y.append(1)
+        Y.append(config.p_code)
         index += 1
         local_index += 1
 
@@ -61,7 +61,7 @@ def compose(filename, p_picks, s_picks, noise_picks):
                                     s_picks[local_index][2][inner_index]])
             inner_index += 1
         X.append(transposed_list)
-        Y.append(2)
+        Y.append(config.s_code)
         index += 1
         local_index += 1
 
@@ -78,7 +78,7 @@ def compose(filename, p_picks, s_picks, noise_picks):
                                     noise_picks[local_index][2][inner_index]])
             inner_index += 1
         X.append(transposed_list)
-        Y.append(3)
+        Y.append(config.noise_code)
         index += 1
         local_index += 1
 
