@@ -156,7 +156,10 @@ if __name__ == "__main__":
             # ..check all stations for current day
             for station in stations:
                 station_archives = seisan.station_archives(definitions, station)
-
+                slices = []
+                station_found = False
+                station_shifted_time = None
+                station_end_time = None
                 for x in station_archives:
                     if x[4] <= current_date_utc:
                         if x[5] is not None and current_date_utc > x[5]:
@@ -172,27 +175,43 @@ if __name__ == "__main__":
                                         3] + '.NOISE'
                                     df = trace.stats.sampling_rate
                                     # Setup and apply STA/LTA
-                                    cft = recursive_sta_lta(trace.data, int(2.5 * df), int(10. * df))
-                                    on_of = trigger_onset(cft, 3.5, 0.5)
+                                    if not station_found:
+                                        cft = recursive_sta_lta(trace.data, int(2.5 * df), int(10. * df))
+                                        on_of = trigger_onset(cft, 3.5, 0.5)
+                                        if len(on_of) > 0:
+                                            # Calculate trigger time
+                                            start_trace_time = trace.stats.starttime
+                                            seconds_passed = float(on_of[0][0]) * float(1.0 / float(df))
+                                            start_slice_time = start_trace_time + int(seconds_passed)
 
-                                    if len(on_of) > 0:
-                                        # Calculate trigger time
-                                        start_trace_time = trace.stats.starttime
-                                        seconds_passed = float(on_of[0][0]) * float(1.0 / float(df))
-                                        start_slice_time = start_trace_time + int(seconds_passed)
+                                            time_shift = random.randrange(1, config.slice_offset)
+                                            shifted_time = start_slice_time - time_shift
+                                            end_time = start_slice_time + config.slice_duration
 
-                                        time_shift = random.randrange(1, config.slice_offset)
-                                        shifted_time = start_slice_time - time_shift
-                                        end_time = start_slice_time + config.slice_duration
+                                            # Check if this is recorded event
+                                            # TODO: Implement with tolerate_events_in_same_day = True
 
-                                        # Check if this is recorded event
-                                        # TODO: Implement with tolerate_events_in_same_day = True
+                                            # Slice and store trigger pick
+                                            station_found = True
+                                            trace_slice = trace.slice(shifted_time, end_time)
 
-                                        # Slice and store trigger pick
-                                        trace_slice = trace.slice(shifted_time, end_time)
+                                            event_id = x[0] + str(x[4].year) + str(x[4].julday) + x[2] + x[3]
+                                            slice_name_station_channel = (trace_slice, trace_file, x[0], x[1], event_id,
+                                                                          'N')
+                                            slices.append(slice_name_station_channel)
 
-                                        slice_name_pair = (trace_slice, trace_file)
-                                        slices.append(slice_name_pair)
+                                            station_shifted_time = shifted_time
+                                            station_end_time = end_time
+                                    else:
+                                        trace_slice = trace.slice(station_shifted_time, station_end_time)
+
+                                        event_id = x[0] + str(x[4].year) + str(x[4].julday) + x[2] + x[3]
+                                        slice_name_station_channel = (trace_slice, trace_file, x[0], x[1], event_id,
+                                                                      'N')
+
+                                        slices.append(slice_name_station_channel)
+                if len(slices) > 0:
+                    picks.save_traces([slices], config.noise_save_dir)
 
         # Go to next day and check if it's next month/year
         current_date[2] += 1
@@ -204,4 +223,4 @@ if __name__ == "__main__":
                 current_date[0] += 1
 
     # Save noise slices
-    picks.save_traces(slices, config.save_dir, 1)
+    # picks.save_traces(slices, config.save_dir, 1)

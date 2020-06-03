@@ -73,9 +73,9 @@ s_picks_path = '/home/chernykh/WAV6/'      # Path to s-wave picks root
 s_file_extension = 'S'        # File extension of s-wave picks
 s_file_postfix_indexing = True  # If True - s-wave pick files can have indexing after extension (e.g. "filename.S.102")
 
-noise_picks_hdf5_path = '/home/chernykh/WAV6'  # Path to noise picks
+noise_picks_hdf5_path = ''  # Path to noise picks
 if len(noise_picks_hdf5_path) == 0:  # Grab path from noise-picker parameters if not set
-    noise_picks_path = noise_save_dir
+    noise_picks_hdf5_path = noise_save_dir
 
 # MESSAGES
 picks_help_message = """Usage: python seismo-phase-picker.py [options]
