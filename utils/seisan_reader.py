@@ -4,6 +4,7 @@ import obspy.io.nordic.core as nordic_reader
 from obspy.core import read
 from obspy.core import utcdatetime
 import logging
+import utils.converter as converter
 
 import utils.converter as converter
 
@@ -91,6 +92,22 @@ def archive_def(definition_line):
         return data_tuple
 
     return None
+
+
+def get_archive_list(archive_definition, defs):
+    """
+    Gets all 3-channels archive list for specified archive and date
+    :param archive_definition:
+    :param date:
+    :param defs:
+    :return:
+    """
+    archives = []
+    for x in defs:
+        if x[0] == archive_definition[0] and x[2] == archive_definition[2] and x[3] == archive_definition[3]:
+            archives.append(x)
+
+    return archives
 
 
 def archive_path(archive_definition, year, day, archive_dir='', output_level=0):

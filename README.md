@@ -59,3 +59,18 @@ Options:
 --offset        arg : maximum picks offset 
 --duration      arg : pick duration
 ```
+
+### hdf5-creator
+**hdf5-creator** is a script designed to compose hdf5 set compatible with [generalized seismic phase 
+detection](https://github.com/interseismic/generalized-phase-detection) model. 
+
+In order to use this script you might set following vars.py parameters:
+```
+hdf5_file_name - path to resulting hdf5 set
+p_picks_path - path to p-phase picks
+s_picks_path - path to s-phase picks
+noise_picks_hdf5_path - path to noise picks 
+```
+Usage:
+
+*python hdf5-creator*
