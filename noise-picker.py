@@ -1,17 +1,11 @@
 import os
-import obspy.io.nordic.core as nordic_reader
-from obspy.core import read
-from obspy.signal.trigger import plot_trigger
-from obspy.signal.trigger import recursive_sta_lta, trigger_onset
-import obspy
 import sys
-import getopt
 import logging
 import random
-import warnings
 
-from obspy.core import utcdatetime
-from pprint import pprint
+from obspy.core import read
+from obspy.signal.trigger import recursive_sta_lta, trigger_onset
+import getopt
 
 import utils.picks_slicing as picks
 import utils.seisan_reader as seisan
@@ -98,7 +92,7 @@ if __name__ == "__main__":
             if f.mode == 'r':
                 f1 = f.readlines()
                 for x in f1:
-                    stations.append(x)
+                    stations.append(x[:len(x) - 1])
             else:
                 logging.warning('Cannot open stations file, will form stations manually')
         else:
@@ -121,6 +115,11 @@ if __name__ == "__main__":
 
     # Main body TODO: move to utils/
     current_date = config.start_date
+
+    print('STATIONS: ' + str(len(stations)))
+    for x in stations:
+        print(str(x))
+    print('PICKING')
     while len(slices) < config.max_noise_picks:
         current_date_utc = converter.utcdatetime_from_tuple(current_date)
         if current_date_utc > end_date_utc:
@@ -149,69 +148,98 @@ if __name__ == "__main__":
                 if file[:2] == day_str:
                     nordic_file_names.append(x[0] + '/' + file)
 
-        events = picks.get_picks_stations_data(nordic_file_names)
+        # events = picks.get_picks_stations_data(nordic_file_names)
 
         # If no recorded events happed that day
-        if config.tolerate_events_in_same_day or len(events) == 0:
-            # ..check all stations for current day
-            for station in stations:
-                station_archives = seisan.station_archives(definitions, station)
-                slices = []
-                station_found = False
-                station_shifted_time = None
-                station_end_time = None
-                for x in station_archives:
-                    if x[4] <= current_date_utc:
-                        if x[5] is not None and current_date_utc > x[5]:
-                            continue
-                        else:
-                            archive_file_path = seisan.archive_path(x, x[4].year, x[4].julday, config.archives_path,
-                                                                    config.output_level)
-                            if os.path.isfile(archive_file_path):
-                                found_archive = True
-                                arch_st = read(archive_file_path)
-                                for trace in arch_st:
-                                    trace_file = x[0] + str(x[4].year) + str(x[4].julday) + x[1] + x[2] + x[
-                                        3] + '.NOISE'
-                                    df = trace.stats.sampling_rate
-                                    # Setup and apply STA/LTA
-                                    if not station_found:
-                                        cft = recursive_sta_lta(trace.data, int(2.5 * df), int(10. * df))
-                                        on_of = trigger_onset(cft, 3.5, 0.5)
-                                        if len(on_of) > 0:
-                                            # Calculate trigger time
-                                            start_trace_time = trace.stats.starttime
-                                            seconds_passed = float(on_of[0][0]) * float(1.0 / float(df))
-                                            start_slice_time = start_trace_time + int(seconds_passed)
+        # if len(events) != 0:
+            # continue
 
-                                            time_shift = random.randrange(1, config.slice_offset)
-                                            shifted_time = start_slice_time - time_shift
-                                            end_time = start_slice_time + config.slice_duration
+        # ..check all stations for current day
+        for station in stations:
+            station_archives = seisan.station_archives(definitions, station)
+            slices = []
 
-                                            # Check if this is recorded event
-                                            # TODO: Implement with tolerate_events_in_same_day = True
+            station_shifted_time = None
+            station_end_time = None
 
-                                            # Slice and store trigger pick
-                                            station_found = True
-                                            trace_slice = trace.slice(shifted_time, end_time)
+            pick_found = False
 
-                                            event_id = x[0] + str(x[4].year) + str(x[4].julday) + x[2] + x[3]
-                                            slice_name_station_channel = (trace_slice, trace_file, x[0], x[1], event_id,
-                                                                          'N')
-                                            slices.append(slice_name_station_channel)
+            # Check for noise pick (STA/LTA):
+            for x in station_archives:
+                if pick_found:
+                    break
 
-                                            station_shifted_time = shifted_time
-                                            station_end_time = end_time
-                                    else:
-                                        trace_slice = trace.slice(station_shifted_time, station_end_time)
+                if x[4] > current_date_utc:
+                    continue
 
-                                        event_id = x[0] + str(x[4].year) + str(x[4].julday) + x[2] + x[3]
-                                        slice_name_station_channel = (trace_slice, trace_file, x[0], x[1], event_id,
-                                                                      'N')
+                if x[5] is not None and current_date_utc > x[5]:
+                    continue
 
-                                        slices.append(slice_name_station_channel)
-                if len(slices) > 0:
-                    picks.save_traces([slices], config.noise_save_dir)
+                archive_file_path = seisan.archive_path(x, x[4].year, x[4].julday,
+                                                        config.archives_path, config.output_level)
+                if not os.path.isfile(archive_file_path):
+                    continue
+
+                arch_st = read(archive_file_path)
+                for trace in arch_st:
+                    df = trace.stats.sampling_rate
+                    # Setup and apply STA/LTA
+                    cft = recursive_sta_lta(trace.data, int(2.5 * df), int(10. * df))
+                    on_of = trigger_onset(cft, 3.5, 0.5)
+                    if len(on_of) > 0:
+                        # Calculate trigger time
+                        start_trace_time = trace.stats.starttime
+                        seconds_passed = float(on_of[0][0]) * float(1.0 / float(df))
+                        start_slice_time = start_trace_time + int(seconds_passed)
+
+                        time_shift = random.randrange(1, config.slice_offset)
+                        shifted_time = start_slice_time - time_shift
+                        end_time = start_slice_time + config.slice_duration
+
+                        # Save slice interval
+                        station_shifted_time = shifted_time
+                        station_end_time = end_time
+                        pick_found = True
+
+                        print('PICK FOUND')
+                        break
+
+            if not pick_found:
+                continue
+            # Get noise picks:
+            for x in station_archives:
+                if x[4] > current_date_utc:
+                    continue
+
+                if x[5] is not None and current_date_utc > x[5]:
+                    continue
+
+                archive_file_path = seisan.archive_path(x, x[4].year, x[4].julday,
+                                                        config.archives_path, config.output_level)
+                if not os.path.isfile(archive_file_path):
+                    continue
+
+                arch_st = read(archive_file_path)
+                for trace in arch_st:
+                    trace_file = x[0] + str(x[4].year) + str(x[4].julday) + x[1] + x[2] + x[3] + '.NOISE'
+
+                    trace_slice = trace.slice(station_shifted_time, station_end_time)
+
+                    if len(trace_slice.data) == 0:
+                        continue
+
+                    event_id = x[0] + str(x[4].year) + str(x[4].julday) + x[2] + x[3]
+                    slice_name_station_channel = (trace_slice, trace_file, x[0], x[1], event_id, 'N')
+
+                    slices.append(slice_name_station_channel)
+
+            if len(slices) > 0:
+                print('STATION: ' + str(station))
+
+                for x in slices:
+                    print(str(x))
+
+                picks.save_traces([slices], config.noise_save_dir)
 
         # Go to next day and check if it's next month/year
         current_date[2] += 1
@@ -221,6 +249,3 @@ if __name__ == "__main__":
             if current_date[1] > 12:
                 current_date[1] = 1
                 current_date[0] += 1
-
-    # Save noise slices
-    # picks.save_traces(slices, config.save_dir, 1)
