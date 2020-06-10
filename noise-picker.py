@@ -116,10 +116,9 @@ if __name__ == "__main__":
     # Main body TODO: move to utils/
     current_date = config.start_date
 
-    print('STATIONS: ' + str(len(stations)))
-    for x in stations:
-        print(str(x))
-    print('PICKING')
+    # [(UTC start time, Station name)]
+    events = picks.get_picks_stations_data(nordic_file_names)
+
     while len(slices) < config.max_noise_picks:
         current_date_utc = converter.utcdatetime_from_tuple(current_date)
         if current_date_utc > end_date_utc:
@@ -148,7 +147,6 @@ if __name__ == "__main__":
                 if file[:2] == day_str:
                     nordic_file_names.append(x[0] + '/' + file)
 
-        # events = picks.get_picks_stations_data(nordic_file_names)
 
         # If no recorded events happed that day
         # if len(events) != 0:
@@ -156,6 +154,13 @@ if __name__ == "__main__":
 
         # ..check all stations for current day
         for station in stations:
+
+            # Check if any events happend for this station today:
+            for x in events:
+                if x[1] == station:
+                    if current_date_utc.year == x[0].year and current_date_utc.julday == x[0].julday:
+                        continue
+
             station_archives = seisan.station_archives(definitions, station)
             slices = []
 
@@ -175,7 +180,7 @@ if __name__ == "__main__":
                 if x[5] is not None and current_date_utc > x[5]:
                     continue
 
-                archive_file_path = seisan.archive_path(x, x[4].year, x[4].julday,
+                archive_file_path = seisan.archive_path(x, current_date_utc.year, current_date_utc.julday,
                                                         config.archives_path, config.output_level)
                 if not os.path.isfile(archive_file_path):
                     continue
@@ -201,7 +206,6 @@ if __name__ == "__main__":
                         station_end_time = end_time
                         pick_found = True
 
-                        print('PICK FOUND')
                         break
 
             if not pick_found:
@@ -214,21 +218,21 @@ if __name__ == "__main__":
                 if x[5] is not None and current_date_utc > x[5]:
                     continue
 
-                archive_file_path = seisan.archive_path(x, x[4].year, x[4].julday,
+                archive_file_path = seisan.archive_path(x, current_date_utc.year, current_date_utc.julday,
                                                         config.archives_path, config.output_level)
                 if not os.path.isfile(archive_file_path):
                     continue
 
                 arch_st = read(archive_file_path)
                 for trace in arch_st:
-                    trace_file = x[0] + str(x[4].year) + str(x[4].julday) + x[1] + x[2] + x[3] + '.NOISE'
+                    trace_file = x[0] + str(current_date_utc.year) + str(current_date_utc.julday) + x[1] + x[2] + x[3] + '.NOISE'
 
                     trace_slice = trace.slice(station_shifted_time, station_end_time)
 
                     if len(trace_slice.data) == 0:
                         continue
 
-                    event_id = x[0] + str(x[4].year) + str(x[4].julday) + x[2] + x[3]
+                    event_id = x[0] + str(current_date_utc.year) + str(current_date_utc.julday) + x[2] + x[3]
                     slice_name_station_channel = (trace_slice, trace_file, x[0], x[1], event_id, 'N')
 
                     slices.append(slice_name_station_channel)

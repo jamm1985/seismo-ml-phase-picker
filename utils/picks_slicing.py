@@ -257,14 +257,16 @@ def save_traces(traces, save_dir, file_format="MSEED"):
 def get_picks_stations_data(path_array):
     data = []
     for x in path_array:
-        data.extend(get_single_picks_stations_data(x))
+        stat_picks = get_single_picks_stations_data(x)
+        if type(stat_picks) == list:
+            data.extend(stat_picks)
 
     return data
 
 
 def get_single_picks_stations_data(nordic_path):
     """
-    Returns all picks for stations with corresponding pick time in format: [(UTC start time, UTC end time, Station name)]
+    Returns all picks for stations with corresponding pick time in format: [(UTC start time, Station name)]
     :param nordic_path: string  path to REA database
     :return:
     """
@@ -275,6 +277,10 @@ def get_single_picks_stations_data(nordic_path):
             logging.warning('In ' + nordic_path + ': ' + str(error))
         return -1
     except ValueError as error:
+        if config.output_level >= 2:
+            logging.warning('In ' + nordic_path + ': ' + str(error))
+        return -1
+    except AttributeError as error:
         if config.output_level >= 2:
             logging.warning('In ' + nordic_path + ': ' + str(error))
         return -1
