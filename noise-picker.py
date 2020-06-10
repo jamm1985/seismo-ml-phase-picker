@@ -184,7 +184,12 @@ if __name__ == "__main__":
                 if not os.path.isfile(archive_file_path):
                     continue
 
-                arch_st = read(archive_file_path)
+                try:
+                    arch_st = read(archive_file_path)
+                except TypeError as error:
+                    if config.output_level >= 2:
+                        logging.warning('In ' + archive_file_path + ': ' + str(error))
+
                 for trace in arch_st:
                     df = trace.stats.sampling_rate
                     # Setup and apply STA/LTA

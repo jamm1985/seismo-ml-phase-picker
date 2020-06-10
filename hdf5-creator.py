@@ -65,7 +65,7 @@ if __name__ == "__main__":
         s_picks.append(pick_list)
 
     # Get noise picks
-    files = utils.get_files(config.noise_picks_hdf5_path, 0, 0, max=config.hdf5_array_length)
+    files = utils.get_files(config.noise_picks_hdf5_path, 0, 0, r'\.N', max=config.hdf5_array_length)
     for file in files:
         if len(noise_picks) >= config.hdf5_array_length:
             break
