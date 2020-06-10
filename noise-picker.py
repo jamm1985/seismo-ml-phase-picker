@@ -147,7 +147,6 @@ if __name__ == "__main__":
                 if file[:2] == day_str:
                     nordic_file_names.append(x[0] + '/' + file)
 
-
         # If no recorded events happed that day
         # if len(events) != 0:
             # continue
