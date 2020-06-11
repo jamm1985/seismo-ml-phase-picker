@@ -5,8 +5,8 @@ wav_path = 'WAV/'  # WAV files subdir name
 rea_path = 'REA/'  # S-files subdir name
 seisan_definitions_path = '/seismo/seisan/DAT/SEISAN.DEF'  # Path to def file (used for finding stations definitions)
 archives_path = '/seismo/archive'                    # Path to archives
-stations_save_path = '/home/chernykh/WAV6/stations'  # Where to save stations list (station-picker)
-stations_load_path = ''  # Leave empty if want to generate stations list in process
+stations_save_path = '/home/chernykh/stations'  # Where to save stations list (station-picker)
+stations_load_path = '/home/chernykh/stations'  # Leave empty if want to generate stations list in process
 
 # CALCULATED GENERAL PATH VARIABLES
 readings_path = path + rea_path  # Partial path to S-files
@@ -37,7 +37,7 @@ end_date = [2015, 1, 1]    # End date for noise picker
 tolerate_events_in_same_day = False  # If False - noise picker will ignore days when actual recorded events happend
 event_tolerance = 15  # Number of seconds around noise trace which should not contain any events
 
-noise_save_dir = ''  # Where to save noise picks
+noise_save_dir = '/home/chernykh/WAVNOISE/'  # Where to save noise picks
 if len(noise_save_dir) == 0:  # Grab path from picks_slicing is not set
     noise_save_dir = save_dir
 

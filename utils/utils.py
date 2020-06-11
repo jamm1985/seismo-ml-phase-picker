@@ -15,26 +15,24 @@ def get_files(path, min_depth=0, max_depth=0, exp=r'', max=-1, dir_per_event = T
              except <path> parameter and filename (e.g. <path> = /home/user/, full path = /home/user/dir/dir2/path,
              then relative base = dir/dir2/)
     """
-
     result_files = []
-    total_files = 0
+    total_events = 0
     if dir_per_event:
         dirs = os.listdir(path)
 
         for directory in dirs:
+            if max != -1 and total_events >= max :
+                break
+
             files_in_dir = []
             all_files = os.walk(path + directory + '/')
             for x in all_files:
                 for file in x[2]:
-                    if max != -1 and total_files >= max:
-                        break
-
                     reg_result = re.search(exp, file)
                     if reg_result is None:
                         continue
 
                     files_in_dir.append(x[0] + file)
-                    total_files += 1
 
             if len(files_in_dir) == 3:
                 regex_filter = re.search(r'\.[a-zA-Z]{3}', files_in_dir[0])
@@ -47,7 +45,6 @@ def get_files(path, min_depth=0, max_depth=0, exp=r'', max=-1, dir_per_event = T
 
                 if regex_filter2 is not None and regex_filter3 is not None:
                     result_files.append(files_in_dir)
-            if max != -1 and total_files >= max:
-                break
+                    total_events += 1
 
     return result_files
