@@ -36,43 +36,61 @@ if __name__ == "__main__":
 
     # Get P picks
     if config.p_picks_dir_per_event:
-        files = utils.get_files(config.p_picks_path, 1, 1, r'\.P', config.hdf5_array_length)
+        files = utils.get_files(config.p_picks_path, 1, 1, r'\.P', config.hdf5_array_length*2)
     else:
-        files = utils.get_files(config.p_picks_path, 0, 0, r'\.P', config.hdf5_array_length)
+        files = utils.get_files(config.p_picks_path, 0, 0, r'\.P', config.hdf5_array_length*2)
 
     for file_list in files:
         if len(p_picks) >= config.hdf5_array_length:
             break
         pick_list = []
+        skip = False
         for file in file_list:
             pick = composer.process(file)
             pick_list.append(pick)
+            if len(pick) != config.required_trace_length:
+                skip = True
+                break
+        if skip:
+            continue
         p_picks.append(pick_list)
 
     # Get S picks
     if config.s_picks_dir_per_event:
-        files = utils.get_files(config.s_picks_path, 1, 1, r'\.S', config.hdf5_array_length)
+        files = utils.get_files(config.s_picks_path, 1, 1, r'\.S', config.hdf5_array_length*2)
     else:
-        files = utils.get_files(config.s_picks_path, 0, 0, r'\.S', config.hdf5_array_length)
+        files = utils.get_files(config.s_picks_path, 0, 0, r'\.S', config.hdf5_array_length*2)
 
-    for file in files:
+    for file_list in files:
         if len(s_picks) >= config.hdf5_array_length:
             break
         pick_list = []
+        skip = False
         for file in file_list:
             pick = composer.process(file)
             pick_list.append(pick)
+            if len(pick) != config.required_trace_length:
+                skip = True
+                break
+        if skip:
+            continue
         s_picks.append(pick_list)
 
     # Get noise picks
-    files = utils.get_files(config.noise_picks_hdf5_path, 0, 0, r'\.N', max=config.hdf5_array_length)
-    for file in files:
+    files = utils.get_files(config.noise_picks_hdf5_path, 0, 0, r'\.N', max=config.hdf5_array_length*2)
+    for file_list in files:
         if len(noise_picks) >= config.hdf5_array_length:
             break
         pick_list = []
+        skip = False
         for file in file_list:
             pick = composer.process(file)
             pick_list.append(pick)
+            if len(pick) != config.required_trace_length:
+                skip = True
+                break
+        if skip:
+            continue
         noise_picks.append(pick_list)
 
     composer.compose(config.hdf5_file_name, p_picks, s_picks, noise_picks)
