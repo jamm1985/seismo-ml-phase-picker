@@ -124,41 +124,16 @@ if __name__ == "__main__":
         if current_date_utc > end_date_utc:
             break
 
-        # Get all events for current day
-        # Get path to s-files folder
-        rea_files_path = config.full_readings_path + '/' + str(current_date[0])
-        if current_date[1] < 10:
-            month_str = '0' + str(current_date[1])
-        else:
-            month_str = str(current_date[1])
-
-        rea_files_path += '/' + month_str + '/'
-
-        nordic_dir_data = os.walk(rea_files_path)
-        nordic_file_names = []
-
-        if current_date[2] < 10:
-            day_str = '0' + str(current_date[2])
-        else:
-            day_str = str(current_date[2])
-
-        for x in nordic_dir_data:
-            for file in x[2]:
-                if file[:2] == day_str:
-                    nordic_file_names.append(x[0] + '/' + file)
-
-        # If no recorded events happed that day
-        # if len(events) != 0:
-            # continue
-
         # ..check all stations for current day
         for station in stations:
-
             # Check if any events happend for this station today:
+            skip_station = False
             for x in events:
                 if x[1] == station:
                     if current_date_utc.year == x[0].year and current_date_utc.julday == x[0].julday:
-                        continue
+                        skip_station = True
+            if skip_station:
+                continue
 
             station_archives = seisan.station_archives(definitions, station)
             slices = []
