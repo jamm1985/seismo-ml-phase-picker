@@ -29,10 +29,10 @@ dir_per_event = True  # If True - creates subdir for every event
 save_dir = '/home/chernykh/WAV6'  # Where to save picks
 
 # NOISE PICKING
-max_noise_picks = 100  # Max amount of noise examples to pick per script run
+max_noise_picks = 10000  # Max amount of noise examples to pick per script run
 
 start_date = [2014, 1, 1]  # Starting date for noise picker
-end_date = [2015, 1, 1]    # End date for noise picker
+end_date = [2019, 1, 1]    # End date for noise picker
 
 tolerate_events_in_same_day = False  # If False - noise picker will ignore days when actual recorded events happend
 event_tolerance = 15  # Number of seconds around noise trace which should not contain any events
@@ -60,6 +60,8 @@ noise_code = 3  # Code for noise picks
 detrend = True  # If True, perform detrend
 
 highpass_filter_df = 2  # High-pass filter frequency, if 1, filter disabled
+
+normalization_enabled = True  # If true - normalize picks
 
 global_max_normalizing = True  # If true, will normalize waveform by all traces in stream
 

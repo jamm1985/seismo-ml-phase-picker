@@ -129,7 +129,8 @@ def process(filename, file_format="MSEED"):
         st.filter("highpass", freq=config.highpass_filter_df)
 
     # Normalize
-    st.normalize(global_max=config.global_max_normalizing)
+    if config.normalization_enabled:
+        st.normalize(global_max=config.global_max_normalizing)
 
     # Check that size is accurate
     resize(st, config.required_trace_length)
