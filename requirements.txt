@@ -1,2 +1,2 @@
-obspy
-h5py
+obspy==1.1.1
+h5py==2.10.0
