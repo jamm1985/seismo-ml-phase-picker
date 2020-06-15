@@ -43,6 +43,7 @@ def compose(filename, p_picks, s_picks, noise_picks):
                                     p_picks[local_index][1][inner_index],
                                     p_picks[local_index][2][inner_index]])
             inner_index += 1
+
         X.append(transposed_list)
         Y.append(config.p_code)
         index += 1
@@ -60,6 +61,7 @@ def compose(filename, p_picks, s_picks, noise_picks):
                                     s_picks[local_index][1][inner_index],
                                     s_picks[local_index][2][inner_index]])
             inner_index += 1
+
         X.append(transposed_list)
         Y.append(config.s_code)
         index += 1
@@ -77,6 +79,7 @@ def compose(filename, p_picks, s_picks, noise_picks):
                                     noise_picks[local_index][1][inner_index],
                                     noise_picks[local_index][2][inner_index]])
             inner_index += 1
+
         X.append(transposed_list)
         Y.append(config.noise_code)
         index += 1
@@ -84,8 +87,8 @@ def compose(filename, p_picks, s_picks, noise_picks):
 
     file = h5py.File(filename, "w")
 
-    dset = file.create_dataset('X', data=X, dtype='f')
-    dset = file.create_dataset('Y', data=Y, dtype='f')
+    dset1 = file.create_dataset('X', data=X)
+    dset2 = file.create_dataset('Y', data=Y)
 
     file.close()
 
@@ -126,7 +129,8 @@ def process(filename, file_format="MSEED"):
         st.filter("highpass", freq=config.highpass_filter_df)
 
     # Normalize
-    st.normalize(global_max=config.global_max_normalizing)
+    if config.normalization_enabled:
+        st.normalize(global_max=config.global_max_normalizing)
 
     # Check that size is accurate
     resize(st, config.required_trace_length)
