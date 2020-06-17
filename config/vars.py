@@ -1,5 +1,5 @@
 # GENERAL PATH VARIABLES
-home_directory = '/home/chernykh/'  # Home directory (serves as prefix to every data saving path)
+home_directory = '/seismo/seisan/WOR/chernykh/'  # Home directory (serves as prefix to every data saving path)
 path = '/seismo/seisan/'  # Seisan root
 db_name = 'IMGG_'  # Database name
 wav_path = 'WAV/'  # WAV files subdir name
@@ -20,14 +20,15 @@ output_level = 5  # 0 - minimal output, 5 - maximum output
 
 # SLICING PARAMETERS
 slice_duration = 4  # Slice duration in seconds
-slice_offset = 5    # Max value of random slice offset in seconds (negatively shifts start of waveform
+slice_offset_end = 2    # Max value of random slice offset in seconds (negatively shifts start of waveform
 #                      ..slicing from 1 to slice_offset seconds)
+slice_offset_start = -2
 
 archive_channels_order = ['N', 'E', 'Z']  # Specifies channels to pick
 
 dir_per_event = True  # If True - creates subdir for every event
 
-save_dir = home_directory + 'WAV6'  # Where to save picks
+save_dir = home_directory + 'WAV'  # Where to save picks
 
 # NOISE PICKING
 max_noise_picks = 10000  # Max amount of noise examples to pick per script run

@@ -1,18 +1,6 @@
-import os
-import sys
-import obspy.io.nordic.core as nordic_reader
 from obspy.core import read
-import logging
-import random
-import utils.seisan_reader as seisan
 import config.vars as config
-from pathlib import Path
-from obspy.io.mseed import InternalMSEEDError
-from obspy.signal.trigger import recursive_sta_lta, trigger_onset
-from pprint import pprint
-import obspy.core.utcdatetime
 import h5py
-import random
 import re
 
 
@@ -33,7 +21,7 @@ def compose(filename, p_picks, s_picks, noise_picks):
 
     index = 0
     local_index = 0
-    while index < config.hdf5_array_length and local_index < len(p_picks):
+    while local_index < len(p_picks):
         transposed_list = []
         inner_index = 0
         while inner_index < len(p_picks[local_index][0]) and \
@@ -51,7 +39,7 @@ def compose(filename, p_picks, s_picks, noise_picks):
 
     index = 0
     local_index = 0
-    while index < config.hdf5_array_length and local_index < len(s_picks):
+    while local_index < len(s_picks):
         transposed_list = []
         inner_index = 0
         while inner_index < len(s_picks[local_index][0]) and \
@@ -69,7 +57,7 @@ def compose(filename, p_picks, s_picks, noise_picks):
 
     index = 0
     local_index = 0
-    while index < config.hdf5_array_length and local_index < len(noise_picks):
+    while local_index < len(noise_picks):
         transposed_list = []
         inner_index = 0
         while inner_index < len(noise_picks[local_index][0]) and \

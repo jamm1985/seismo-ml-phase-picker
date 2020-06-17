@@ -126,6 +126,7 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
 
                     # Checking archives
                     found_archive = False
+                    time_shift = random.randrange(config.slice_offset_start, config.slice_offset_end)
                     if len(archive_definitions) > 0:
                         station = pick.waveform_id.station_code
                         station_archives = seisan.station_archives(archive_definitions, station)
@@ -146,8 +147,12 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                                                              ' does not cover required slice interval')
                                                 continue
 
+                                            shifted_time = pick.time - time_shift
+                                            end_time = shifted_time + slice_duration
+
                                             found_archive = True
-                                            trace_slice = trace.slice(pick.time, pick.time + slice_duration)
+
+                                            trace_slice = trace.slice(shifted_time, end_time)
                                             if output_level >= 3:
                                                 logging.info('\t\t' + str(trace_slice))
 
@@ -155,18 +160,6 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                                             event_id = x[0] + str(x[4].year) + str(x[4].julday) + x[2] + x[3]
                                             slice_name_station_channel = (trace_slice, trace_file, x[0], x[1], event_id,
                                                                           pick.phase_hint)
-
-                                            if len(trace_slice.data) == 0:
-                                                print('SAMPLES: ' + str(len(trace_slice.data)))
-                                                print('TRACE: ' + str(trace_slice))
-                                                print('SLICING: ' + str(pick.time) + '  ' + str(
-                                                    pick.time + slice_duration)
-                                                      + ' slice ' + str(slice_duration))
-                                                print('ORIGINAL TRACE: ' + str(trace))
-                                                print('ARCHIVE INFO: ' + str(x[4]) + '  ' + str(x[5]))
-                                                print('    ' + str(x))
-                                                print('ARCHIVE: ' + archive_file_path)
-                                                print('\n\n')
 
                                             channel_slices.append(slice_name_station_channel)
 
@@ -199,7 +192,7 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
 
                         wav_st = read(wav_path)
                         for trace in wav_st:
-                            time_shift = random.randrange(1, config.slice_offset)
+                            time_shift = random.randrange(config.slice_offset_start, config.slice_offset_end)
                             shifted_time = pick.time - time_shift
                             end_time = pick.time + slice_duration
                             trace_slice = trace.slice(shifted_time, end_time)

@@ -165,6 +165,7 @@ if __name__ == "__main__":
                     if config.output_level >= 2:
                         logging.warning('In ' + archive_file_path + ': ' + str(error))
 
+                time_shift = random.randrange(config.slice_offset_start, config.slice_offset_end)
                 for trace in arch_st:
                     df = trace.stats.sampling_rate
                     # Setup and apply STA/LTA
@@ -176,9 +177,8 @@ if __name__ == "__main__":
                         seconds_passed = float(on_of[0][0]) * float(1.0 / float(df))
                         start_slice_time = start_trace_time + int(seconds_passed)
 
-                        time_shift = random.randrange(1, config.slice_offset)
                         shifted_time = start_slice_time - time_shift
-                        end_time = start_slice_time + config.slice_duration
+                        end_time = shifted_time + config.slice_duration
 
                         # Save slice interval
                         station_shifted_time = shifted_time
