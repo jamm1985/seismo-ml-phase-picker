@@ -1,9 +1,10 @@
 import os
-import sys
 import re
+from pathlib import Path
 
+import config.vars as config
 
-def get_files(path, min_depth=0, max_depth=0, exp=r'', max=-1, dir_per_event = True):
+def get_files(path, min_depth=0, max_depth=0, exp=r'', max=-1, dir_per_event = True, is_noise = False):
     """
     Returns list of all files in provided path
     Generates exception:
@@ -34,6 +35,15 @@ def get_files(path, min_depth=0, max_depth=0, exp=r'', max=-1, dir_per_event = T
 
                     files_in_dir.append(x[0] + file)
 
+                    if is_noise:
+                        id = 0
+                    else:
+                        p = Path(x[0] + file)
+                        parts = p.parts
+                        id = 0
+                        if len(parts) >= 2:
+                            id = int(parts[len(parts) - 2])
+
             if len(files_in_dir) == 3:
                 regex_filter = re.search(r'\.[a-zA-Z]{3}', files_in_dir[0])
                 type_of_file = regex_filter.group(0)[1]
@@ -44,7 +54,19 @@ def get_files(path, min_depth=0, max_depth=0, exp=r'', max=-1, dir_per_event = T
                 regex_filter3 = re.search(pattern, files_in_dir[2])
 
                 if regex_filter2 is not None and regex_filter3 is not None:
-                    result_files.append(files_in_dir)
+                    # Sort files_in_dir by channels order
+                    ordered_files_id_dir = []
+                    for channel in config.order_of_channels:
+                        for file in files_in_dir:
+                            if file[len(file) - 3] == channel:
+                                ordered_files_id_dir.append(file)
+                                break
+
+                    ordered_files_id_dir.append(id)
+
+                    if len(ordered_files_id_dir) == 4:
+                        result_files.append(ordered_files_id_dir)
+
                     total_events += 1
 
     return result_files

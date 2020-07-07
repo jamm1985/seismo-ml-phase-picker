@@ -43,9 +43,16 @@ if __name__ == "__main__":
     for file_list in files:
         pick_list = []
         skip = False
+        index = -1
         for file in file_list:
+            index += 1
+            if index >= 3:
+                break
             pick = composer.process(file)
-            pick_list.append(pick)
+            if pick is None:
+                skip = True
+                break
+            pick_list.append([pick, file, file_list[3]])
             if len(pick) != config.required_trace_length:
                 skip = True
                 break
@@ -62,9 +69,16 @@ if __name__ == "__main__":
     for file_list in files:
         pick_list = []
         skip = False
+        index = -1
         for file in file_list:
+            index += 1
+            if index >= 3:
+                break
             pick = composer.process(file)
-            pick_list.append(pick)
+            if pick is None:
+                skip = True
+                break
+            pick_list.append([pick, file, file_list[3]])
             if len(pick) != config.required_trace_length:
                 skip = True
                 break
@@ -73,13 +87,20 @@ if __name__ == "__main__":
         s_picks.append(pick_list)
 
     # Get noise picks
-    files = utils.get_files(config.noise_picks_hdf5_path, 0, 0, r'\.N')
+    files = utils.get_files(config.noise_picks_hdf5_path, 0, 0, r'\.N', is_noise=True)
     for file_list in files:
         pick_list = []
         skip = False
+        index = -1
         for file in file_list:
+            index += 1
+            if index >= 3:
+                break
             pick = composer.process(file)
-            pick_list.append(pick)
+            if pick is None:
+                skip = True
+                break
+            pick_list.append([pick, file, file_list[3]])
             if len(pick) != config.required_trace_length:
                 skip = True
                 break
