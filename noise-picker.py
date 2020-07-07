@@ -165,7 +165,10 @@ if __name__ == "__main__":
                     if config.output_level >= 2:
                         logging.warning('In ' + archive_file_path + ': ' + str(error))
 
-                time_shift = random.randrange(config.slice_offset_start, config.slice_offset_end)
+                if config.slice_offset_start == config.slice_offset_end:
+                    time_shift = config.slice_offset_start
+                else:
+                    time_shift = random.randrange(config.slice_offset_start, config.slice_offset_end)
                 for trace in arch_st:
                     df = trace.stats.sampling_rate
                     # Setup and apply STA/LTA
@@ -214,7 +217,8 @@ if __name__ == "__main__":
                     event_id = x[0] + str(current_date_utc.year) + str(current_date_utc.julday) + x[2] + x[3]
                     slice_name_station_channel = (trace_slice, trace_file, x[0], x[1], event_id, 'N')
 
-                    slices.append(slice_name_station_channel)
+                    if len(trace_slice.data) != 0 and len(trace_slice.data) >= 400:
+                        slices.append(slice_name_station_channel)
 
             if len(slices) > 0:
                 print('STATION: ' + str(station))
