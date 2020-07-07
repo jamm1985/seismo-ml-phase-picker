@@ -1,18 +1,6 @@
-import os
-import sys
-import obspy.io.nordic.core as nordic_reader
 from obspy.core import read
-import logging
-import random
-import utils.seisan_reader as seisan
 import config.vars as config
-from pathlib import Path
-from obspy.io.mseed import InternalMSEEDError
-from obspy.signal.trigger import recursive_sta_lta, trigger_onset
-from pprint import pprint
-import obspy.core.utcdatetime
 import h5py
-import random
 import re
 
 
@@ -26,69 +14,84 @@ def compose(filename, p_picks, s_picks, noise_picks):
     :return:
     """
     # Creating datasets
+    print('NOISE: ' + str(len(noise_picks)))
+    print('P: ' + str(len(p_picks)))
+    print('S: ' + str(len(s_picks)))
     initial_set = []
 
     X = []
     Y = []
+    Z = []
 
     index = 0
     local_index = 0
-    while index < config.hdf5_array_length and local_index < len(p_picks):
+    while local_index < len(p_picks):
         transposed_list = []
         inner_index = 0
-        while inner_index < len(p_picks[local_index][0]) and \
-                inner_index < len(p_picks[local_index][1]) and \
-                inner_index < len(p_picks[local_index][2]):
-            transposed_list.append([p_picks[local_index][0][inner_index],
-                                    p_picks[local_index][1][inner_index],
-                                    p_picks[local_index][2][inner_index]])
+        while inner_index < len(p_picks[local_index][0][0]) and \
+                inner_index < len(p_picks[local_index][1][0]) and \
+                inner_index < len(p_picks[local_index][2][0]):
+            transposed_list.append([p_picks[local_index][0][0][inner_index],
+                                    p_picks[local_index][1][0][inner_index],
+                                    p_picks[local_index][2][0][inner_index]])
             inner_index += 1
 
         X.append(transposed_list)
         Y.append(config.p_code)
+        Z.append(p_picks[local_index][0][2])
         index += 1
         local_index += 1
 
     index = 0
     local_index = 0
-    while index < config.hdf5_array_length and local_index < len(s_picks):
+    while local_index < len(s_picks):
         transposed_list = []
         inner_index = 0
-        while inner_index < len(s_picks[local_index][0]) and \
-                inner_index < len(s_picks[local_index][1]) and \
-                inner_index < len(s_picks[local_index][2]):
-            transposed_list.append([s_picks[local_index][0][inner_index],
-                                    s_picks[local_index][1][inner_index],
-                                    s_picks[local_index][2][inner_index]])
+        while inner_index < len(s_picks[local_index][0][0]) and \
+                inner_index < len(s_picks[local_index][1][0]) and \
+                inner_index < len(s_picks[local_index][2][0]):
+            transposed_list.append([s_picks[local_index][0][0][inner_index],
+                                    s_picks[local_index][1][0][inner_index],
+                                    s_picks[local_index][2][0][inner_index]])
             inner_index += 1
 
         X.append(transposed_list)
         Y.append(config.s_code)
+        ascii_string = s_picks[local_index][0][1].encode("ascii", "ignore")
+        Z.append(ascii_string)
         index += 1
         local_index += 1
 
     index = 0
     local_index = 0
-    while index < config.hdf5_array_length and local_index < len(noise_picks):
+
+    while local_index < len(noise_picks) and local_index < len(s_picks):
         transposed_list = []
         inner_index = 0
-        while inner_index < len(noise_picks[local_index][0]) and \
-                inner_index < len(noise_picks[local_index][1]) and \
-                inner_index < len(noise_picks[local_index][2]):
-            transposed_list.append([noise_picks[local_index][0][inner_index],
-                                    noise_picks[local_index][1][inner_index],
-                                    noise_picks[local_index][2][inner_index]])
+        while inner_index < len(noise_picks[local_index][0][0]) and \
+                inner_index < len(noise_picks[local_index][1][0]) and \
+                inner_index < len(noise_picks[local_index][2][0]):
+            transposed_list.append([noise_picks[local_index][0][0][inner_index],
+                                    noise_picks[local_index][1][0][inner_index],
+                                    noise_picks[local_index][2][0][inner_index]])
             inner_index += 1
 
         X.append(transposed_list)
         Y.append(config.noise_code)
+        ascii_string = noise_picks[local_index][0][1].encode("ascii", "ignore")
+        Z.append(ascii_string)
         index += 1
         local_index += 1
+
+
 
     file = h5py.File(filename, "w")
 
     dset1 = file.create_dataset('X', data=X)
     dset2 = file.create_dataset('Y', data=Y)
+
+    if config.save_ids:
+        dset3 = file.create_dataset(config.ids_dataset_name, data=Z)
 
     file.close()
 
@@ -112,6 +115,8 @@ def process(filename, file_format="MSEED"):
         is_acc = True
 
     # Resampling
+    if st[0].stats.sampling_rate < config.required_df:
+        return None
     if st[0].stats.sampling_rate != config.required_df:
         resample(st, config.required_df)
 

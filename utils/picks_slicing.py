@@ -104,17 +104,65 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
 
     index = -1
     slices = []
+    picks_line = "STAT SP IPHASW"
     for event in events[0].events:
         index += 1
+
+        f = open(reading_path)
+        l = [line.strip() for line in f]
+
+        id = None
+        picks_started = False
+        picks_amount = len(event.picks)
+        picks_read = 0
+        picks_distance = []
+        for line in l:
+            if picks_started and picks_read < picks_amount and len(line) >= 74:
+                try:
+                    dist = float(line[70:74])
+                except ValueError as e:
+                    dist = None
+                picks_distance.append(dist)
+
+            if len(line) > 73:
+                title = line[0:6]
+                if title == "ACTION":
+                    id_title = line[56:59]
+                    if id_title == "ID:":
+                        id_str = line[59:73]
+                        id = int(id_str)
+
+            if len(line) > 25:
+                if line[0:len(picks_line)] == picks_line:
+                    picks_started = True
+
+        # Min magnitude check
+        if len(event.magnitudes) > 0:
+            if event.magnitudes[0].mag < config.min_magnitude:
+                continue
+
+        # Max depth check
+        if len(event.origins) > 0:
+            if event.origins[0].depth is None:
+                continue
+            if event.origins[0].depth > config.max_depth:
+                continue
 
         try:
             if len(event.picks) > 0:  # Only for files with picks
                 if output_level >= 3:
                     logging.info('File: ' + reading_path + ' Event #' + str(index) + ' Picks: ' + str(len(event.picks)))
 
+                picks_index = -1
                 for pick in event.picks:
                     if output_level >= 3:
                         logging.info('\t' + str(pick))
+
+                    picks_index += 1
+
+                    if picks_index < len(picks_distance) and picks_distance[picks_index] is not None:
+                        if picks_distance[picks_index] > config.max_dist:
+                            continue
 
                     # Check phase
                     if pick.phase_hint != 'S' and pick.phase_hint != 'P':
@@ -126,6 +174,10 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
 
                     # Checking archives
                     found_archive = False
+                    if config.slice_offset_start == 0 and config.slice_offset_end == 0:
+                        time_shift = 0
+                    else:
+                        time_shift = random.randrange(config.slice_offset_start, config.slice_offset_end)
                     if len(archive_definitions) > 0:
                         station = pick.waveform_id.station_code
                         station_archives = seisan.station_archives(archive_definitions, station)
@@ -138,6 +190,7 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                                 else:
                                     archive_file_path = seisan.archive_path(x, pick.time.year, pick.time.julday,
                                                                             config.archives_path, output_level)
+
                                     if os.path.isfile(archive_file_path):
                                         arch_st = read(archive_file_path)
                                         for trace in arch_st:
@@ -146,33 +199,27 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                                                              ' does not cover required slice interval')
                                                 continue
 
+                                            shifted_time = pick.time - time_shift
+                                            end_time = shifted_time + slice_duration
+
                                             found_archive = True
-                                            trace_slice = trace.slice(pick.time, pick.time + slice_duration)
+
+                                            trace_slice = trace.slice(shifted_time, end_time)
                                             if output_level >= 3:
                                                 logging.info('\t\t' + str(trace_slice))
 
                                             trace_file = x[0] + str(x[4].year) + str(x[4].julday) + x[1] + x[2] + x[3]
                                             event_id = x[0] + str(x[4].year) + str(x[4].julday) + x[2] + x[3]
                                             slice_name_station_channel = (trace_slice, trace_file, x[0], x[1], event_id,
-                                                                          pick.phase_hint)
+                                                                          pick.phase_hint, id_str)
 
-                                            if len(trace_slice.data) == 0:
-                                                print('SAMPLES: ' + str(len(trace_slice.data)))
-                                                print('TRACE: ' + str(trace_slice))
-                                                print('SLICING: ' + str(pick.time) + '  ' + str(
-                                                    pick.time + slice_duration)
-                                                      + ' slice ' + str(slice_duration))
-                                                print('ORIGINAL TRACE: ' + str(trace))
-                                                print('ARCHIVE INFO: ' + str(x[4]) + '  ' + str(x[5]))
-                                                print('    ' + str(x))
-                                                print('ARCHIVE: ' + archive_file_path)
-                                                print('\n\n')
-
-                                            channel_slices.append(slice_name_station_channel)
+                                            if len(trace_slice.data) >= 400:
+                                                channel_slices.append(slice_name_station_channel)
 
                     # Read and slice waveform
                     if found_archive:
-                        slices.append(channel_slices)
+                        if len(channel_slices) > 0:
+                            slices.append(channel_slices)
                         continue
 
                     if True:
@@ -199,7 +246,7 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
 
                         wav_st = read(wav_path)
                         for trace in wav_st:
-                            time_shift = random.randrange(1, config.slice_offset)
+                            time_shift = random.randrange(config.slice_offset_start, config.slice_offset_end)
                             shifted_time = pick.time - time_shift
                             end_time = pick.time + slice_duration
                             trace_slice = trace.slice(shifted_time, end_time)
@@ -225,10 +272,13 @@ def save_traces(traces, save_dir, file_format="MSEED"):
     """
     for event in traces:
         if config.dir_per_event and len(event) > 0:
-            dir_name = event[0][4]
+            base_dir_name = event[0][4]
+            if len(event[0]) == 7 and event[0][6] is not None:
+                base_dir_name = event[0][6]
+            dir_name = base_dir_name
             index = 0
             while os.path.isdir(save_dir + '/' + dir_name):
-                dir_name = event[0][4] + str(index)
+                dir_name = base_dir_name + str(index)
                 index += 1
             os.mkdir(save_dir + '/' + dir_name)
         for x in event:
