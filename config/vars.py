@@ -29,6 +29,9 @@ archive_channels_order = ['N', 'E', 'Z']  # Specifies channels to pick
 dir_per_event = True  # If True - creates subdir for every event
 
 save_dir = home_directory + 'WAV'  # Where to save picks
+min_magnitude = 1.5  # Minimal magnitude of events allowed
+max_depth = 50000  # Maximum depth allowed
+max_dist = 300.0  # Maximum distance to station allowed
 
 # NOISE PICKING
 max_noise_picks = 10000  # Max amount of noise examples to pick per script run

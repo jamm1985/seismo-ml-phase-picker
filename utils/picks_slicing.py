@@ -104,17 +104,65 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
 
     index = -1
     slices = []
+    picks_line = "STAT SP IPHASW"
     for event in events[0].events:
         index += 1
+
+        f = open(reading_path)
+        l = [line.strip() for line in f]
+
+        id = None
+        picks_started = False
+        picks_amount = len(event.picks)
+        picks_read = 0
+        picks_distance = []
+        for line in l:
+            if picks_started and picks_read < picks_amount and len(line) >= 74:
+                try:
+                    dist = float(line[70:74])
+                except ValueError as e:
+                    dist = None
+                picks_distance.append(dist)
+
+            if len(line) > 73:
+                title = line[0:6]
+                if title == "ACTION":
+                    id_title = line[56:59]
+                    if id_title == "ID:":
+                        id_str = line[59:73]
+                        id = int(id_str)
+
+            if len(line) > 25:
+                if line[0:len(picks_line)] == picks_line:
+                    picks_started = True
+
+        # Min magnitude check
+        if len(event.magnitudes) > 0:
+            if event.magnitudes[0].mag < config.min_magnitude:
+                continue
+
+        # Max depth check
+        if len(event.origins) > 0:
+            if event.origins[0].depth is None:
+                continue
+            if event.origins[0].depth > config.max_depth:
+                continue
 
         try:
             if len(event.picks) > 0:  # Only for files with picks
                 if output_level >= 3:
                     logging.info('File: ' + reading_path + ' Event #' + str(index) + ' Picks: ' + str(len(event.picks)))
 
+                picks_index = -1
                 for pick in event.picks:
                     if output_level >= 3:
                         logging.info('\t' + str(pick))
+
+                    picks_index += 1
+
+                    if picks_index < len(picks_distance) and picks_distance[picks_index] is not None:
+                        if picks_distance[picks_index] > config.max_dist:
+                            continue
 
                     # Check phase
                     if pick.phase_hint != 'S' and pick.phase_hint != 'P':
