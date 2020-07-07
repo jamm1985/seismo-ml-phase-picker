@@ -211,13 +211,15 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                                             trace_file = x[0] + str(x[4].year) + str(x[4].julday) + x[1] + x[2] + x[3]
                                             event_id = x[0] + str(x[4].year) + str(x[4].julday) + x[2] + x[3]
                                             slice_name_station_channel = (trace_slice, trace_file, x[0], x[1], event_id,
-                                                                          pick.phase_hint)
+                                                                          pick.phase_hint, id_str)
 
-                                            channel_slices.append(slice_name_station_channel)
+                                            if len(trace_slice.data) >= 400:
+                                                channel_slices.append(slice_name_station_channel)
 
                     # Read and slice waveform
                     if found_archive:
-                        slices.append(channel_slices)
+                        if len(channel_slices) > 0:
+                            slices.append(channel_slices)
                         continue
 
                     if True:
@@ -270,10 +272,13 @@ def save_traces(traces, save_dir, file_format="MSEED"):
     """
     for event in traces:
         if config.dir_per_event and len(event) > 0:
-            dir_name = event[0][4]
+            base_dir_name = event[0][4]
+            if len(event[0]) == 7 and event[0][6] is not None:
+                base_dir_name = event[0][6]
+            dir_name = base_dir_name
             index = 0
             while os.path.isdir(save_dir + '/' + dir_name):
-                dir_name = event[0][4] + str(index)
+                dir_name = base_dir_name + str(index)
                 index += 1
             os.mkdir(save_dir + '/' + dir_name)
         for x in event:
