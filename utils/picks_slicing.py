@@ -174,7 +174,10 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
 
                     # Checking archives
                     found_archive = False
-                    time_shift = random.randrange(config.slice_offset_start, config.slice_offset_end)
+                    if config.slice_offset_start == 0 and config.slice_offset_end == 0:
+                        time_shift = 0
+                    else:
+                        time_shift = random.randrange(config.slice_offset_start, config.slice_offset_end)
                     if len(archive_definitions) > 0:
                         station = pick.waveform_id.station_code
                         station_archives = seisan.station_archives(archive_definitions, station)
@@ -187,6 +190,7 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                                 else:
                                     archive_file_path = seisan.archive_path(x, pick.time.year, pick.time.julday,
                                                                             config.archives_path, output_level)
+
                                     if os.path.isfile(archive_file_path):
                                         arch_st = read(archive_file_path)
                                         for trace in arch_st:
