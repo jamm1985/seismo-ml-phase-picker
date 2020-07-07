@@ -61,6 +61,9 @@ hdf5_array_length = 100  # Amount of S/P-picks and noise picks
 p_code = 1  # Code for p-wave picks
 s_code = 2  # Code for s-wave picks
 noise_code = 3  # Code for noise picks
+p_code = 0  # Code for p-wave picks
+s_code = 1  # Code for s-wave picks
+noise_code = 2  # Code for noise picks
 
 detrend = True  # If True, perform detrend
 
