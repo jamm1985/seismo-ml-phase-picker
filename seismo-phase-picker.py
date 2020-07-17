@@ -66,6 +66,9 @@ if __name__ == "__main__":
     if config.output_level >= 5:
         logging.info('Reading S-files:\n')
 
+    tot = 0
+    err = 0
+
     total = float(len(nordic_file_names))
     current = 0.0
     next_stop = 1.0
@@ -73,6 +76,11 @@ if __name__ == "__main__":
     for file in nordic_file_names:
         slices = picks.slice_from_reading(file, config.full_waveforms_path, config.slice_duration, definitions, config.output_level)
 
+        tot += 1
+        if slices == -1:
+            err += 1
+
+        print('TOTAL: ' + str(tot) + ' ERR: ' + str(err) + ' SLICES: ' + str(slices))
         if slices != -1:
             picks.save_traces(slices, config.save_dir)
 
@@ -80,5 +88,5 @@ if __name__ == "__main__":
         proc = current/total
         proc = proc*100
         if proc > next_stop:
-            # print("PROGRESS: " + str(next_stop) + '%')
+            print("PROGRESS: " + str(next_stop) + '%')
             next_stop += step

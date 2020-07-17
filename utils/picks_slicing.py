@@ -1,17 +1,11 @@
 import os
-import sys
 import obspy.io.nordic.core as nordic_reader
 from obspy.core import read
 import logging
-import random
 import utils.seisan_reader as seisan
 import config.vars as config
-from pathlib import Path
 from obspy.io.mseed import InternalMSEEDError
-from obspy.signal.trigger import recursive_sta_lta, trigger_onset
-from pprint import pprint
-import obspy.core.utcdatetime
-
+import matplotlib.pyplot as plt
 
 def get_stations(nordic_file_names, output_level=0):
     """
@@ -174,10 +168,6 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
 
                     # Checking archives
                     found_archive = False
-                    if config.slice_offset_start == 0 and config.slice_offset_end == 0:
-                        time_shift = 0
-                    else:
-                        time_shift = random.randrange(config.slice_offset_start, config.slice_offset_end)
                     if len(archive_definitions) > 0:
                         station = pick.waveform_id.station_code
                         station_archives = seisan.station_archives(archive_definitions, station)
@@ -193,13 +183,17 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
 
                                     if os.path.isfile(archive_file_path):
                                         arch_st = read(archive_file_path)
+
+                                        #arch_st.normalize(global_max=config.global_max_normalizing)  # remove that
+                                        #arch_st.filter("highpass", freq=config.highpass_filter_df)  # remove that
+                                        # line later
                                         for trace in arch_st:
                                             if trace.stats.starttime > pick.time or pick.time + slice_duration >= trace.stats.endtime:
                                                 logging.info('\t\tArchive ' + archive_file_path +
                                                              ' does not cover required slice interval')
                                                 continue
 
-                                            shifted_time = pick.time - time_shift
+                                            shifted_time = pick.time - config.static_slice_offset
                                             end_time = shifted_time + slice_duration
 
                                             found_archive = True
@@ -213,6 +207,36 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                                             slice_name_station_channel = (trace_slice, trace_file, x[0], x[1], event_id,
                                                                           pick.phase_hint, id_str)
 
+                                            #print("ID " + str(id_str))
+                                            #if id_str == '20140413140958':
+                                                #print(x[0])
+                                                #if True:#x[0] == 'NKL':
+                                                    #trace.integrate()
+                                                    #trace_slice.integrate()
+                                                    #trace.normalize()
+                                                    #trace_slice.normalize()
+                                                    #print('FOUND ID! NORMALIZED')
+                                                    #print('ARCHIVE: ' + archive_file_path)
+                                                    #print('FILE: ' + trace_file)
+                                                    #print('SLICE: ' + str(trace_slice))
+                                                    #print('TIME: ' + str(shifted_time) + ' till ' + str(end_time))
+                                                    #print('TRACE: ' + str(trace))
+                                                    #print('DATA: ' + str(trace_slice.data))
+
+                                                    #trace_slice.filter("highpass", freq=config.highpass_filter_df)
+                                                    #patho = "/seismo/seisan/WOR/chernykh/plots/part/"
+                                                    #patho2 = "/seismo/seisan/WOR/chernykh/plots/whole/"
+
+                                                    #plt.plot(trace_slice.data)
+                                                    #plt.ylabel('Amplitude')
+                                                    #plt.savefig(patho + trace_file)
+                                                    #plt.figure()
+
+                                                    #plt.plot(trace.data)
+                                                    #plt.ylabel('Amplitude')
+                                                    #plt.savefig(patho2 + trace_file)
+                                                    #plt.figure()
+
                                             if len(trace_slice.data) >= 400:
                                                 channel_slices.append(slice_name_station_channel)
 
@@ -221,39 +245,6 @@ def slice_from_reading(reading_path, waveforms_path, slice_duration=5, archive_d
                         if len(channel_slices) > 0:
                             slices.append(channel_slices)
                         continue
-
-                    if True:
-                        continue  # For now ignore WAV database
-
-                    for name in events[1][index]:
-                        # Get WAV path from REA path
-                        splits = reading_path.split('/')
-                        year = splits[len(splits) - 3]
-                        month = splits[len(splits) - 2]
-
-                        # If failed: get WAV path from filename
-                        if len(year) != 4 or len(month) != 2:
-                            splits = name.split('-')
-                            year = splits[0]
-                            month = splits[1]
-                        wav_path = waveforms_path + '/' + year + '/' + month + '/' + name
-
-                        if not os.path.isfile(wav_path):
-                            if output_level >= 2:
-                                logging.warning(
-                                    'In file: ' + reading_path + ' pick trace file: ' + wav_path + ' does not exist')
-                                continue
-
-                        wav_st = read(wav_path)
-                        for trace in wav_st:
-                            time_shift = random.randrange(config.slice_offset_start, config.slice_offset_end)
-                            shifted_time = pick.time - time_shift
-                            end_time = pick.time + slice_duration
-                            trace_slice = trace.slice(shifted_time, end_time)
-                            if output_level >= 3:
-                                logging.info('\t\t' + str(trace_slice))
-                            slice_name_pair = (trace_slice, name)
-                            slices.append(slice_name_pair)
 
         except ValueError as error:
             if output_level >= 2:

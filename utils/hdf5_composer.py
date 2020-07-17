@@ -98,7 +98,7 @@ def compose(filename, p_picks, s_picks, noise_picks):
     return None
 
 
-def process(filename, file_format="MSEED"):
+def process(filename, file_format="MSEED", rand=0, noise=False):
     """
     Processes a pick file to be suitable for hdf5 packing
     :param filename:    string - filename
@@ -110,9 +110,12 @@ def process(filename, file_format="MSEED"):
     # Is acceleration based
     is_acc = False
     regex_filter = re.search(r'\.[a-zA-Z]{3}', filename)
-    type_of_file = regex_filter.group(0)[1]
-    if type_of_file == 'H':
+    type_of_file = str(regex_filter.group(0)[1:4])
+    if type_of_file in config.acc_codes:
         is_acc = True
+
+    if config.ignore_acc and is_acc:
+        return None
 
     # Resampling
     if st[0].stats.sampling_rate < config.required_df:
@@ -132,6 +135,14 @@ def process(filename, file_format="MSEED"):
     # High-pass filtering
     if config.highpass_filter_df > 1:
         st.filter("highpass", freq=config.highpass_filter_df)
+    # st.filter("bandpass", freqmin=2, freqmax=20)
+
+    # Slice offset
+    if not noise:
+        start_time = st[0].stats.starttime
+        end_time = st[0].stats.endtime
+        offset = (config.slice_duration - config.slice_size)/2
+        st = st.slice((start_time + offset), (end_time - offset))
 
     # Normalize
     if config.normalization_enabled:
