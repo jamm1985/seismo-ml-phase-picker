@@ -1,8 +1,11 @@
 import os
+from os.path import isdir
+from os.path import isfile
 import re
 from pathlib import Path
 
 import config.vars as config
+
 
 def get_files(path, min_depth=0, max_depth=0, exp=r'', max=-1, dir_per_event = True, is_noise = False):
     """
@@ -70,3 +73,71 @@ def get_files(path, min_depth=0, max_depth=0, exp=r'', max=-1, dir_per_event = T
                     total_events += 1
 
     return result_files
+
+
+def get_nordic_files(readings_path):
+    """
+    Returns list of full filenames of REA files from given database directory parameter (which can be
+            a single path or list of paths
+    :param readings_path: string or list of strings - full path to database directory
+    :return: list of strings - full filenames of REA files
+    """
+    nordic_file_names = []
+    if type(readings_path) is list:
+        for file in readings_path:
+            names = get_nordic_files_from_path(file)
+            if names is not None:
+                nordic_file_names.extend(names)
+    else:
+        names = get_nordic_files_from_path(readings_path)
+        if names is not None:
+            nordic_file_names = names
+
+    return nordic_file_names
+
+
+def get_nordic_files_from_path(readings_path):
+    """
+    Returns list of full filenames of REA files from given database directory
+    :param readings_path: string - full path to database directory
+    :return: list of strings - full filenames of REA files
+    """
+    if type(readings_path) is not str:
+        return None
+
+    nordic_dir_data = os.walk(readings_path)
+    nordic_file_names = []
+
+    for x in nordic_dir_data:
+        for file in x[2]:
+            nordic_file_names.append(x[0] + '/' + file)
+
+    return nordic_file_names
+
+
+def normalize_path(path):
+    """
+    Normalizes provided path to: /something/something/something
+    :param path:    string    path to normalize
+    :return:        string    normalized path
+    """
+    while path[len(path) - 1] == ' ' or path[len(path) - 1] == '/':
+        path = path[:len(path) - 1]
+    return path
+
+
+def event_exists(path):
+    """
+    Checks if specified event exists
+    :param path: path to event directory
+    :return: True - if event exists, false otherwise
+    """
+    if not isdir(normalize_path(path)):
+        return False
+
+    if not isfile(normalize_path(path) + '/' + config.event_stats_file):
+        return False
+
+    # Check event stats file
+
+    return True

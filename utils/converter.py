@@ -35,3 +35,15 @@ def utcdatetime_from_tuple(date):
         line += '0'
     line += str(date[2])
     return utcdatetime_from_string(line)
+
+
+def default_path(path):
+    """
+    Converts path to default form (with no slash at the end)
+    :param path: string - path to convert
+    :return:     string - result path
+    """
+    while path[len(path) - 1] == '/' or path[len(path) - 1] == '\\':
+        path = path[0:-1]
+
+    return path

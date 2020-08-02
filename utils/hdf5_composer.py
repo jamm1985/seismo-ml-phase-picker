@@ -98,7 +98,81 @@ def compose(filename, p_picks, s_picks, noise_picks):
     return None
 
 
-def process(filename, file_format="MSEED", rand=0, noise=False):
+def process_pick_list(list):
+    """
+    Processes a list of waveform picks. Only works with actual phases, does not process noise list
+    :param list: List of waveform picks
+    :return: List of processed data
+    """
+    # Get stats
+    pick_phase_hint = list[0]
+    all_actual_picks = list[1]
+    pick_stats = all_actual_picks[0]
+    all_picks = all_actual_picks[1:]
+
+    result_list = []
+    # Parse events
+    for event in all_picks:
+        event_stats = event[0]
+        slice_groups = event[1:]
+
+        # Parse slice group
+        for group in slice_groups:
+            group_stats = group[0]
+            picks = group[1:]
+
+            # Parse actual slices
+            if len(picks) != len(config.archive_channels_order):
+                continue
+
+            picks_ordered = []
+            for channel_name in config.archive_channels_order:
+                channel_found = False
+                for file in picks:
+                    file_name_split = file.split('/')
+                    file_name = file_name_split[len(file_name_split) - 1]
+                    # Check file channel
+                    name_split = file_name.split('.')
+                    channel = name_split[2][len(name_split[2]) - 1]
+
+                    if channel == channel_name:
+                        picks_ordered.append(file)
+                        channel_found = True
+                        break
+                if not channel_found:
+                    break
+
+            if len(picks_ordered) != len(config.archive_channels_order):
+                continue
+
+            # Process slices
+            processed_slices = []
+            for slice_file in picks_ordered:
+                file_name_split = slice_file.split('/')
+                file_name = file_name_split[len(file_name_split) - 1]
+                name_split = file_name.split('.')
+                spip = name_split[2]
+                is_acc = False
+                # Check if its accelerogramm
+                if spip in config.acc_codes:
+                    is_acc = True
+
+                processed = process(slice_file, group_stats.file_format, noise=False, is_acc=is_acc)
+
+                if processed is None:
+                    processed_slices = None
+                    break
+
+                # Save pick and filename and event ID
+                processed_slices.append([processed, slice_file, group_stats.event_id])
+
+            if processed_slices is not None:
+                result_list.append(processed_slices)
+
+    return result_list
+
+
+def process(filename, file_format="MSEED", rand=0, noise=False, is_acc=False):
     """
     Processes a pick file to be suitable for hdf5 packing
     :param filename:    string - filename
@@ -108,14 +182,15 @@ def process(filename, file_format="MSEED", rand=0, noise=False):
     st = read(filename, file_format)
 
     # Is acceleration based
-    is_acc = False
-    regex_filter = re.search(r'\.[a-zA-Z]{3}', filename)
-    type_of_file = str(regex_filter.group(0)[1:4])
-    if type_of_file in config.acc_codes:
-        is_acc = True
+    if noise:
+        is_acc = False
+        regex_filter = re.search(r'\.[a-zA-Z]{3}', filename)
+        type_of_file = str(regex_filter.group(0)[1:4])
+        if type_of_file in config.acc_codes:
+            is_acc = True
 
-    if config.ignore_acc and is_acc:
-        return None
+        if config.ignore_acc and is_acc:
+            return None
 
     # Resampling
     if st[0].stats.sampling_rate < config.required_df:
@@ -135,7 +210,6 @@ def process(filename, file_format="MSEED", rand=0, noise=False):
     # High-pass filtering
     if config.highpass_filter_df > 1:
         st.filter("highpass", freq=config.highpass_filter_df)
-    # st.filter("bandpass", freqmin=2, freqmax=20)
 
     # Slice offset
     if not noise:
