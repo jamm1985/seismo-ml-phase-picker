@@ -1,14 +1,9 @@
-import os
-import obspy.io.nordic.core as nordic_reader
-from obspy.core import read
-import obspy
 import sys
 import getopt
 import logging
-from obspy.core import utcdatetime
-import h5py
 import utils.hdf5_composer as composer
 import utils.utils as utils
+import random
 
 import config.vars as config
 
@@ -48,7 +43,13 @@ if __name__ == "__main__":
             index += 1
             if index >= 3:
                 break
-            pick = composer.process(file)
+
+            if config.slice_offset_start == 0 and config.slice_offset_end == 0:
+                time_shift = 0
+            else:
+                time_shift = random.randrange(config.slice_offset_start, config.slice_offset_end)
+
+            pick = composer.process(file, rand=time_shift)
             if pick is None:
                 skip = True
                 break
@@ -74,7 +75,13 @@ if __name__ == "__main__":
             index += 1
             if index >= 3:
                 break
-            pick = composer.process(file)
+
+            if config.slice_offset_start == 0 and config.slice_offset_end == 0:
+                time_shift = 0
+            else:
+                time_shift = random.randrange(config.slice_offset_start, config.slice_offset_end)
+
+            pick = composer.process(file, rand=time_shift)
             if pick is None:
                 skip = True
                 break
@@ -96,7 +103,13 @@ if __name__ == "__main__":
             index += 1
             if index >= 3:
                 break
-            pick = composer.process(file)
+
+            if config.slice_offset_start == 0 and config.slice_offset_end == 0:
+                time_shift = 0
+            else:
+                time_shift = random.randrange(config.slice_offset_start, config.slice_offset_end)
+
+            pick = composer.process(file, rand=time_shift, noise=True)
             if pick is None:
                 skip = True
                 break

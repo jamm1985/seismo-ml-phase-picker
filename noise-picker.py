@@ -119,11 +119,12 @@ if __name__ == "__main__":
     # [(UTC start time, Station name)]
     events = picks.get_picks_stations_data(nordic_file_names)
 
+
     while len(slices) < config.max_noise_picks:
         current_date_utc = converter.utcdatetime_from_tuple(current_date)
         if current_date_utc > end_date_utc:
             break
-
+        print(str(current_date_utc))
         # ..check all stations for current day
         for station in stations:
             # Check if any events happend for this station today:
@@ -180,7 +181,7 @@ if __name__ == "__main__":
                         seconds_passed = float(on_of[0][0]) * float(1.0 / float(df))
                         start_slice_time = start_trace_time + int(seconds_passed)
 
-                        shifted_time = start_slice_time - time_shift
+                        shifted_time = start_slice_time - config.static_slice_offset - time_shift
                         end_time = shifted_time + config.slice_duration
 
                         # Save slice interval
@@ -188,6 +189,7 @@ if __name__ == "__main__":
                         station_end_time = end_time
                         pick_found = True
 
+                        print('main trace: ' + str(trace))
                         break
 
             if not pick_found:
@@ -219,6 +221,8 @@ if __name__ == "__main__":
 
                     if len(trace_slice.data) != 0 and len(trace_slice.data) >= 400:
                         slices.append(slice_name_station_channel)
+                        print('trace: ' + str(trace))
+                        print('slice: ' + str(len(trace_slice.data)) + ' start: ' + str(station_shifted_time) + ' end: ' + str(station_end_time))
 
             if len(slices) > 0:
                 print('STATION: ' + str(station))

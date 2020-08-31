@@ -19,10 +19,8 @@ full_waveforms_path = waveforms_path + db_name  # Full path to WAV files
 output_level = 5  # 0 - minimal output, 5 - maximum output
 
 # SLICING PARAMETERS
-slice_duration = 4  # Slice duration in seconds
-slice_offset_end = 0    # Max value of random slice offset in seconds (negatively shifts start of waveform
-#                      ..slicing from 1 to slice_offset seconds)
-slice_offset_start = 0
+slice_duration = 10  # Slice duration in seconds
+static_slice_offset = slice_duration/2  # Center the pick
 
 archive_channels_order = ['N', 'E', 'Z']  # Specifies channels to pick
 
@@ -32,7 +30,7 @@ min_magnitude = 1.5  # Minimal magnitude of events allowed
 max_depth = 50000  # Maximum depth allowed
 max_dist = 300.0  # Maximum distance to station allowed
 
-save_dir = home_directory + 'WAVNoShiftInfo'  # Where to save picks
+save_dir = home_directory + 'WAVTest' # 'WAVNoShiftInfo'  # Where to save picks
 
 # NOISE PICKING
 max_noise_picks = 10000  # Max amount of noise examples to pick per script run
@@ -43,7 +41,7 @@ end_date = [2019, 1, 1]    # End date for noise picker
 tolerate_events_in_same_day = False  # If False - noise picker will ignore days when actual recorded events happend
 event_tolerance = 15  # Number of seconds around noise trace which should not contain any events
 
-noise_save_dir = home_directory + 'WAVNOISENoShift'  # Where to save noise picks
+noise_save_dir = home_directory + 'NoiseFixed'  # Where to save noise picks
 if len(noise_save_dir) == 0:  # Grab path from picks_slicing is not set
     noise_save_dir = save_dir
 
@@ -51,7 +49,7 @@ if len(noise_save_dir) == 0:  # Grab path from picks_slicing is not set
 month_length = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
 # HDF5 PARAMETERS
-hdf5_file_name = home_directory + 'wavNames.hdf5'  # Name to save composed hdf5 file under
+hdf5_file_name = home_directory + 'WAVTest.hdf5'  # Name to save composed hdf5 file under
 
 required_df = 100  # Required frequency of hdf5 traces for GPD
 required_trace_length = 400  # Required amount of samples (basically length*frequency)
@@ -63,32 +61,41 @@ p_code = 0  # Code for p-wave picks
 s_code = 1  # Code for s-wave picks
 noise_code = 2  # Code for noise picks
 
+ignore_acc = True  # If true will skip all accelerogramms
+acc_codes = ['ENE', 'ENN', 'ENZ', 'HNE', 'HNN', 'HNZ']  # Codes for accelerogramms
+
 save_ids = True  # If true, will add new dataset with events IDs
 ids_dataset_name = 'Z'  # Name for dataset with events IDs
 
 order_of_channels = ['Z', 'N', 'E']  # Order of channels for hdf5 set
 
-detrend = False  # If True, perform detrend
+detrend = True  # If True, perform detrend
 
-highpass_filter_df = 1  # High-pass filter frequency, if 1, filter disabled
+highpass_filter_df = 2  # High-pass filter frequency, if 1, filter disabled
 
 normalization_enabled = True  # If true - normalize picks
 
 global_max_normalizing = True  # If true, will normalize waveform by all traces in stream
 
 p_picks_dir_per_event = True  # Are p-wave picks organized with sub-dirs for each event
-p_picks_path = home_directory + 'WAVNoShiftInfo/'      # Path to p-wave picks root
+p_picks_path = home_directory + 'WAVTest/'  # 'WAVNoShiftInfo/'      # Path to p-wave picks root
 p_file_extension = 'P'        # File extension of p-wave picks
 p_file_postfix_indexing = True  # If True - p-wave pick files can have indexing after extension (e.g. "filename.P.102")
 
 s_picks_dir_per_event = True  # Are s-wave picks organized with sub-dirs for each event
-s_picks_path = home_directory + 'WAVNoShiftInfo/'      # Path to s-wave picks root
+s_picks_path = home_directory + 'WAVTest/'  # 'WAVNoShiftInfo/'      # Path to s-wave picks root
 s_file_extension = 'S'        # File extension of s-wave picks
 s_file_postfix_indexing = True  # If True - s-wave pick files can have indexing after extension (e.g. "filename.S.102")
 
 noise_picks_hdf5_path = ''  # Path to noise picks
 if len(noise_picks_hdf5_path) == 0:  # Grab path from noise-picker parameters if not set
     noise_picks_hdf5_path = noise_save_dir + '/'
+
+slice_offset_end = 0    # Max value of random slice offset in seconds (negatively shifts start of waveform
+#                      ..slicing from 1 to slice_offset seconds)
+slice_offset_start = 0
+
+slice_size = 4  # In seconds
 
 # MESSAGES
 picks_help_message = """Usage: python seismo-phase-picker.py [options]
